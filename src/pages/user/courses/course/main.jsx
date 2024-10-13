@@ -1,12 +1,15 @@
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react';
+import { useCookies } from 'react-cookie';
 
 import { Button } from '@/components/ui/button';
 
 import Header from '@/components/Header';
 import NavigationBar from '@/components/user/NavigationBar';
+import GuestNavigationBar from '@/components/user/GuestNavigationBar';
 
 const Course = () => {
+    const [cookies] = useCookies(['authorization'])
     const { state } = useLocation();
 
     console.log(state);
@@ -15,8 +18,8 @@ const Course = () => {
         <div className="w-screen h-screen flex flex-col">
             <Header></Header>
             <div className="flex" style={{height: "calc(100vh - 70px)"}}>
-                <NavigationBar></NavigationBar>
-                <div className="w-auto h-auto p-5 space-x-3">
+                {cookies.authorization? <NavigationBar></NavigationBar> : <GuestNavigationBar></GuestNavigationBar>}
+                <div className="w-full h-auto p-5 space-x-3">
                     <div className="w-full h-full flex">
                         <Link 
                         to=".."

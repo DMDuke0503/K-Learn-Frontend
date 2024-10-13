@@ -19,6 +19,7 @@ import Dashboard from './pages/admin/dashboard/main';
 import Transaction from './pages/admin/transaction/main';
 import User from './pages/admin/user/main';
 import ContentManagement from './pages/content/courses/main';
+import OAuth2RedirectHandler from './pages/login/OAuth/OAuth2RedirectHandler';
 
 const router = createBrowserRouter([
   {
@@ -68,6 +69,10 @@ const router = createBrowserRouter([
   {
     path: "/content/courses",
     Component: ContentManagement,
+  },
+  {
+    path: "/oauth2/redirect", // Add this route for handling OAuth2 redirects
+    Component: OAuth2RedirectHandler,
   },
 ]);
 

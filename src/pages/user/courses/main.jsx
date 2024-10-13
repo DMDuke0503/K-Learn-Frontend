@@ -4,9 +4,9 @@ import { useCookies } from "react-cookie";
 
 import Header from "@/components/Header";
 import NavigationBar from "@/components/user/NavigationBar";
+import GuestNavigationBar from "@/components/user/GuestNavigationBar";
 
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import axios from "axios";
 
 const Courses = () => {
@@ -33,7 +33,7 @@ const Courses = () => {
         <div className="w-full h-full flex flex-col">
             <Header></Header>
             <div className="flex" style={{height: "calc(100vh - 70px)"}}>
-                <NavigationBar></NavigationBar>
+                {cookies.authorization? <NavigationBar></NavigationBar> : <GuestNavigationBar></GuestNavigationBar>}
                 <div className="w-full h-full flex flex-col items-center space-y-5 overflow-y-scroll">
                     {courses.map(course => 
                         <div key={course.id} className="w-auto h-auto p-5 flex space-x-3">
