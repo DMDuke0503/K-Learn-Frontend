@@ -23,6 +23,7 @@ const Courses = () => {
         })
         .then(res => {
             setCourses(res.data);
+            console.log(courses);
         })
         .catch(err => {
             console.log(err);

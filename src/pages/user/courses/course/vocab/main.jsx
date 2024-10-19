@@ -2,7 +2,7 @@ import { useCookies } from 'react-cookie';
 
 import Header from '@/components/Header';
 import NavigationBar from '@/components/user/NavigationBar';
-import GuestTopic from '@/components/user/courses/course/vocab/Guest';
+import Topic from '@/components/user/courses/course/vocab/Topic';
 import GuestNavigationBar from '@/components/user/GuestNavigationBar';
 
 const Vocab = () => {
@@ -13,7 +13,7 @@ const Vocab = () => {
             <Header></Header>
             <div className="flex" style={{height: "calc(100vh - 70px)"}}>
                 {cookies.authorization? <NavigationBar></NavigationBar> : <GuestNavigationBar></GuestNavigationBar>}
-                <GuestTopic></GuestTopic>
+                <Topic></Topic>
             </div>
         </div>
     )

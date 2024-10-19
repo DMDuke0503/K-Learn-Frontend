@@ -20,6 +20,9 @@ import Transaction from './pages/admin/transaction/main';
 import User from './pages/admin/user/main';
 import ContentManagement from './pages/content/courses/main';
 import OAuth2RedirectHandler from './pages/login/OAuth/OAuth2RedirectHandler';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
+import { vi } from 'date-fns/locale';
 
 const router = createBrowserRouter([
   {
@@ -78,8 +81,10 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <CookiesProvider defaultSetOptions={{ path: '/' }}>
-      <RouterProvider router={router} />
-    </CookiesProvider>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
+      <CookiesProvider defaultSetOptions={{ path: '/' }}>
+        <RouterProvider router={router} />
+      </CookiesProvider>
+    </LocalizationProvider>
   </StrictMode>,
 )
