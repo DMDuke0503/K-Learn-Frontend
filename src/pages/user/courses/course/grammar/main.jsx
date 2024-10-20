@@ -17,37 +17,17 @@ import {
 import Header from '@/components/Header';
 import NavigationBar from '@/components/user/NavigationBar';
 import GuestNavigationBar from '@/components/user/GuestNavigationBar';
-import GuestGrammar from '@/components/user/courses/course/grammar/Guest';
+import GrammarLesson from '@/components/user/courses/course/grammar/GrammarLesson';
 
 const Grammar = () => {
-    const { state } = useLocation();
     const [cookies] = useCookies('authorization');
-    const [topics, setTopics] = useState([]);
-    
-    useEffect(() => {
-        axios({
-            method: "GET",
-            url: `http://localhost:8080/api/vocabulary_topic/${state.parent_course.id}`,
-            headers: {
-                Authorization: `Bearer ${cookies.authorization}`
-            }
-        })
-        .then(res => {
-            console.log(res.data);
-
-            setTopics(res.data);
-        })
-        .catch(err => {
-            console.log(err);
-        });
-    }, []);
 
     return (
         <div className="w-screen h-screen flex flex-col font-montserrat">
             <Header></Header>
             <div className="h-[90vh] flex">
                 {cookies.authorization? <NavigationBar></NavigationBar> : <GuestNavigationBar></GuestNavigationBar>}
-                <GuestGrammar></GuestGrammar>
+                <GrammarLesson></GrammarLesson>
             </div>
         </div>
     )

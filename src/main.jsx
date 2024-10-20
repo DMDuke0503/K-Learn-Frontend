@@ -15,6 +15,7 @@ import Course from './pages/user/courses/course/main';
 import Vocab from './pages/user/courses/course/vocab/main';
 import VocabLearn from './pages/user/courses/course/vocab/learn/main';
 import Grammar from './pages/user/courses/course/grammar/main';
+import GrammarLearn from './pages/user/courses/course/grammar/learn/main';
 import Dashboard from './pages/admin/dashboard/main';
 import Transaction from './pages/admin/transaction/main';
 import User from './pages/admin/user/main';
@@ -56,6 +57,10 @@ const router = createBrowserRouter([
   {
     path: "/courses/:id/grammar",
     Component: Grammar
+  },
+  {
+    path: "/courses/:id/grammar/learn",
+    Component: GrammarLearn
   },
   {
     path: "/admin",

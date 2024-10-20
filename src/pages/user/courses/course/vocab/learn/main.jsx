@@ -140,12 +140,14 @@ const VocabLearn = () => {
                 setQuizIndex(0);
                 getNotLearnedVocabs();
                 getQuiz();
+                getProgress();
             }
         } else {
             setIsQuiz(false);
             setQuizIndex(0);
             getNotLearnedVocabs();
             getQuiz();
+            getProgress();
         }
     }
 
