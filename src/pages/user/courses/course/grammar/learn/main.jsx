@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CircleCheck, Check, X } from 'lucide-react';
 import { useCookies } from 'react-cookie';
 import { useState, useEffect } from 'react';
@@ -11,6 +11,7 @@ import SmallNavigationBar from '@/components/user/SmallNavigationBar';
 
 const GrammarLearn = () => {
     const { state } = useLocation();
+    const navigate = useNavigate();
     const [grammarLesson, setGrammarLesson] = useState(state.grammar);
     const [isQuiz, setIsQuiz] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -94,13 +95,19 @@ const GrammarLearn = () => {
 
     const handleNextGrammarLesson = () => {
         if (grammarLesson.lesson < listLesson.length) {
-            if (!isQuiz && 'quiz' in grammarLesson) {
-                setIsQuiz(true);
+            if (!isQuiz) {
+                if ('quiz' in grammarLesson) {
+                    setIsQuiz(true);
+                } else {
+                    setIsQuiz(false);
+                    setGradingResults(null);
+                    setGrammarLesson(listLesson[grammarLesson.lesson]);
+                    console.log(grammarLesson);
+                }
             } else {
-                if (isQuiz && !gradingResults) {
+                if (!gradingResults) {
                     gradeQuiz();
-                } 
-                else {
+                } else {
                     setIsQuiz(false);
                     setGradingResults(null);
                     setSelectedAnswers(Array(grammarLesson.quiz.questions.length).fill(null));
@@ -109,16 +116,23 @@ const GrammarLearn = () => {
                 }
             }
         } else if (grammarLesson.lesson == listLesson.length) {
-            if (!isQuiz && 'quiz' in grammarLesson) {
-                setIsQuiz(true);
-            } else {
-                if (isQuiz) {
-                    gradeQuiz();
-                    setIsQuiz(false);
-                } 
-                else {
+            if (!isQuiz) {
+                if ('quiz' in grammarLesson) {
+                    setIsQuiz(true);
+                } else {
                     setIsQuiz(false);
                     setGradingResults(null);
+                    navigate("..", { state: { parent_course: state.parent_course }, relative: "path" });
+                    console.log(grammarLesson);
+                }
+            } else {
+                if (!gradingResults) {
+                    gradeQuiz();
+                } else {
+                    setIsQuiz(false);
+                    setGradingResults(null);
+                    setSelectedAnswers(Array(grammarLesson.quiz.questions.length).fill(null));
+                    navigate("..", { state: { parent_course: state.parent_course }, relative: "path" });
                     console.log(grammarLesson);
                 }
             }
@@ -129,7 +143,9 @@ const GrammarLearn = () => {
         setGrammarLesson(listLesson[lesson - 1]);
         setIsQuiz(false);
         setGradingResults(null);
-        setSelectedAnswers(Array(grammarLesson.quiz.questions.length).fill(null));
+        if ('quiz' in grammarLesson) {
+            setSelectedAnswers(Array(grammarLesson.quiz.questions.length).fill(null));
+        }
     }
 
     useEffect(() => {
@@ -246,7 +262,7 @@ const GrammarLearn = () => {
                         <div className={`w-full h-[10%] px-[5%] flex justify-between items-center bg-[#FFF8E3] ${gradingResults && !pass && "hidden"}`}>
                             <button onClick={handlePrevGrammarLesson} className="w-[15%] h-[50px] text-lg bg-[#D9D9D9] rounded-[15px]">Quay lại</button>
                             <button onClick={handleNextGrammarLesson} className="w-[15%] h-[50px] text-lg bg-[#FDF24E] rounded-[15px]">
-                                {isQuiz && !gradingResults? "Nộp bài" : "Tiếp tục"}
+                                {isQuiz && !gradingResults? "Nộp bài": (grammarLesson.lesson == listLesson.length? "Hoàn thành": "Tiếp tục")}
                             </button>
                         </div>
                     </div>

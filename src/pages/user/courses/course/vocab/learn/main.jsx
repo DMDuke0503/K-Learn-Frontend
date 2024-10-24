@@ -171,7 +171,6 @@ const VocabLearn = () => {
         getNotLearnedVocabs();
         getProgress();
         getQuiz();
-
     }, []);
 
     return (
