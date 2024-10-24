@@ -47,16 +47,14 @@ const Login = () => {
         window.location.href = `http://localhost:8080/oauth2/authorization/google?redirect_uri=${redirectUri}`;
     };
 
-
-
     return (
         <div className="h-screen w-screen flex flex-col">
             <div className="h-[12%] flex flex-row items-end mx-20">
                 <img src="/logo.png" alt="" style={{ width: 70, height: "auto" }} />
                 <p className="font-montserrat text-4xl font-bold py-[5px]" style={{ color: "#FCD24F" }}>K-LEARN</p>
             </div>
-            <div className="h-auto flex justify-center items-center">
-                <img src="/nha_hanok.png" alt="" className="object-contain h-auto w-full z-1" />
+            <div className="h-[88%] flex justify-center items-center">
+                <img src="/nha_hanok.png" alt="" className="w-full h-full z-1" />
                 <div className="h-4/5 w-4/5 absolute z-50 flex flex-col items-center justify-center" style={{ backgroundColor: "#0000004C" }} >
                     <p className="font-montserrat text-5xl font-bold mt-20" style={{ color: "#FFFFFF" }}>ĐĂNG NHẬP</p>
                     <div className="flex flex-col justify-evenly items-center h-4/5 w-4/5">

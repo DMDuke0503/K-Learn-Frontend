@@ -5,11 +5,10 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 import { Progress } from '@/components/ui/progress';
-import { Textarea } from "@/components/ui/textarea";
 
 import Header from '@/components/Header';
 import SmallNavigationBar from '@/components/user/SmallNavigationBar';
-import { get } from 'react-hook-form';
+import { set } from 'date-fns';
 
 const VocabLearn = () => {
     const { state } = useLocation();
@@ -23,6 +22,7 @@ const VocabLearn = () => {
     const [answer, setAnswer] = useState("");
     const [answerIndex, setAnswerIndex] = useState(-1);
     const [correct, setCorrect] = useState(false);
+    const [correctAnswerIndex, setCorrectAnswerIndex] = useState(null);
     const [nextQuiz, setNextQuiz] = useState(false);
     const [id, setId] = useState(0);
     const [count, setCount] = useState(0);
@@ -86,11 +86,16 @@ const VocabLearn = () => {
                 setVocabIndex(vocabIndex + 1);
             } else {
                 setIsQuiz(true);
+                setNextQuiz(false);
                 setVocabIndex(0);
             }
-        } else {
+        } else if (vocabIndex === notLearnedVocabs.length - 1) {
+            setNextQuiz(false);
             setIsQuiz(true);
             setVocabIndex(0);
+        } else {
+            setIsQuiz(false);
+            setNextQuiz(false);
         }
     }
 
@@ -100,7 +105,8 @@ const VocabLearn = () => {
 
     const handleQuizAnswer = async (answer, index) => {
         setAnswerIndex(index);
-        if (answer === quiz[quizIndex].definition) {
+        setCorrectAnswerIndex(quiz[quizIndex].options.indexOf(quiz[quizIndex].definition));
+        if (answer.toLowerCase() === quiz[quizIndex].definition.toLowerCase()) {
             setCorrect(true);
             setCount(count + 1);
             if (quiz[quizIndex].type === "essay" && count === 1) {
@@ -133,11 +139,13 @@ const VocabLearn = () => {
         if (quizIndex < quiz.length - 1) {
             if (quizIndex < 9) {
                 setQuizIndex(quizIndex + 1);
+                setCorrectAnswerIndex(null);
                 setNextQuiz(false);
                 setAnswer("");
             } else {
                 setIsQuiz(false);
                 setQuizIndex(0);
+                setCorrectAnswerIndex(null);
                 getNotLearnedVocabs();
                 getQuiz();
                 getProgress();
@@ -145,6 +153,7 @@ const VocabLearn = () => {
         } else {
             setIsQuiz(false);
             setQuizIndex(0);
+            setCorrectAnswerIndex(null);
             getNotLearnedVocabs();
             getQuiz();
             getProgress();
@@ -201,60 +210,116 @@ const VocabLearn = () => {
                                                     <div className="h-1/2 w-1/2 flex space-x-5">
                                                         <button
                                                             className={
-                                                                `w-3/5 h-full px-10 py-3 border rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 0? correct? "bg-[#1EF265A8] cursor-not-allowed": "bg-[#F51C1F] cursor-not-allowed": "border-black"}`
+                                                                `w-3/5 h-full px-10 py-3 border border-black rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 0? (correct? "bg-[#1EF265A8]": "bg-[#F51C1F]"): (correctAnswerIndex == 0? "bg-[#1EF265A8]": "")}`
                                                             }
                                                             {...(nextQuiz? { disabled: true }: {})}
                                                             onClick={() => handleQuizAnswer(quiz[quizIndex]?.options[0], 0)}
                                                         >{quiz[quizIndex]?.options[0] || '...'}</button>
-                                                        <Check 
-                                                            className={
-                                                                `w-1/5 h-full ${answerIndex == 0? correct? "text-[#1EF265A8]": "text-[#F51C1F]": "invisible"}`
-                                                            }
-                                                        ></Check>
+                                                        {
+                                                            correct? 
+                                                            <Check 
+                                                                className={
+                                                                    `w-1/5 h-full text-[#1EF265A8] ${answerIndex == 0? "": "invisible"}`
+                                                                }
+                                                            ></Check>:
+                                                            correctAnswerIndex == 0?
+                                                            <Check
+                                                                className={
+                                                                    `w-1/5 h-full text-[#1EF265A8]`
+                                                                }
+                                                            ></Check>:
+                                                            <X
+                                                                className={
+                                                                    `w-1/5 h-full text-[#F51C1F] ${answerIndex == 0? "": "invisible"}`
+                                                                }
+                                                            ></X>
+                                                        }
                                                     </div>
                                                     <div className="h-1/2 w-1/2 flex justify-end space-x-5">
                                                         <button
                                                             className={
-                                                                `w-3/5 h-full px-10 py-3 border rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 1? correct? "bg-[#1EF265A8] cursor-not-allowed": "bg-[#F51C1F] cursor-not-allowed": "border-black"}`
+                                                                `w-3/5 h-full px-10 py-3 border border-black rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 1? (correct? "bg-[#1EF265A8]": "bg-[#F51C1F]"): (correctAnswerIndex == 1? "bg-[#1EF265A8]": "")}`
                                                             }
                                                             {...(nextQuiz? { disabled: true }: {})}
                                                             onClick={() => handleQuizAnswer(quiz[quizIndex]?.options[1], 1)}
                                                         >{quiz[quizIndex]?.options[1] || '...'}</button>
-                                                        <Check 
-                                                            className={
-                                                                `w-1/5 h-full ${answerIndex == 1? correct? "text-[#1EF265A8]": "text-[#F51C1F]": "invisible"}`
-                                                            }
-                                                        ></Check>
+                                                        {
+                                                            correct? 
+                                                            <Check 
+                                                                className={
+                                                                    `w-1/5 h-full text-[#1EF265A8] ${answerIndex == 1? "": "invisible"}`
+                                                                }
+                                                            ></Check>:
+                                                            correctAnswerIndex == 1?
+                                                            <Check
+                                                                className={
+                                                                    `w-1/5 h-full text-[#1EF265A8]`
+                                                                }
+                                                            ></Check>:
+                                                            <X
+                                                                className={
+                                                                    `w-1/5 h-full text-[#F51C1F] ${answerIndex == 1? "": "invisible"}`
+                                                                }
+                                                            ></X>
+                                                        }
                                                     </div>
                                                 </div>
                                                 <div className="h-[45%] w-full flex justify-between">
                                                 <div className="h-1/2 w-1/2 flex space-x-5">
                                                         <button
                                                             className={
-                                                                `w-3/5 h-full px-10 py-3 border rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 2? correct? "bg-[#1EF265A8] cursor-not-allowed": "bg-[#F51C1F] cursor-not-allowed": "border-black"}`
+                                                                `w-3/5 h-full px-10 py-3 border border-black rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 2? (correct? "bg-[#1EF265A8]": "bg-[#F51C1F]"): (correctAnswerIndex == 2? "bg-[#1EF265A8]": "")}`
                                                             }
                                                             {...(nextQuiz? { disabled: true }: {})}
                                                             onClick={() => handleQuizAnswer(quiz[quizIndex]?.options[2], 2)}
                                                         >{quiz[quizIndex]?.options[2] || '...'}</button>
-                                                        <Check 
-                                                            className={
-                                                                `w-1/5 h-full ${answerIndex == 2? correct? "text-[#1EF265A8]": "text-[#F51C1F]": "invisible"}`
-                                                            }
-                                                        ></Check>
+                                                        {
+                                                            correct? 
+                                                            <Check 
+                                                                className={
+                                                                    `w-1/5 h-full text-[#1EF265A8] ${answerIndex == 2? "": "invisible"}`
+                                                                }
+                                                            ></Check>:
+                                                            correctAnswerIndex == 2?
+                                                            <Check
+                                                                className={
+                                                                    `w-1/5 h-full text-[#1EF265A8]`
+                                                                }
+                                                            ></Check>:
+                                                            <X
+                                                                className={
+                                                                    `w-1/5 h-full text-[#F51C1F] ${answerIndex == 2? "": "invisible"}`
+                                                                }
+                                                            ></X>
+                                                        }
                                                     </div>
                                                     <div className="h-1/2 w-1/2 flex justify-end space-x-5">
                                                         <button
                                                             className={
-                                                                `w-3/5 h-full px-10 py-3 border rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 3? correct? "bg-[#1EF265A8] cursor-not-allowed": "bg-[#F51C1F] cursor-not-allowed": "border-black"}`
+                                                                `w-3/5 h-full px-10 py-3 border border-black rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 3? (correct? "bg-[#1EF265A8]": "bg-[#F51C1F]"): (correctAnswerIndex == 3? "bg-[#1EF265A8]": "")}`
                                                             }
                                                             {...(nextQuiz? { disabled: true }: {})}
                                                             onClick={() => handleQuizAnswer(quiz[quizIndex]?.options[3], 3)}
                                                         >{quiz[quizIndex]?.options[3] || '...'}</button>
-                                                        <Check 
-                                                            className={
-                                                                `w-1/5 h-full ${answerIndex == 3? correct? "text-[#1EF265A8]": "text-[#F51C1F]": "invisible"}`
-                                                            }
-                                                        ></Check>
+                                                        {
+                                                            correct? 
+                                                            <Check 
+                                                                className={
+                                                                    `w-1/5 h-full text-[#1EF265A8] ${answerIndex == 3? "": "invisible"}`
+                                                                }
+                                                            ></Check>:
+                                                            correctAnswerIndex == 3?
+                                                            <Check
+                                                                className={
+                                                                    `w-1/5 h-full text-[#1EF265A8]`
+                                                                }
+                                                            ></Check>:
+                                                            <X
+                                                                className={
+                                                                    `w-1/5 h-full text-[#F51C1F] ${answerIndex == 3? "": "invisible"}`
+                                                                }
+                                                            ></X>
+                                                        }
                                                     </div>
                                                 </div>
                                             </div>

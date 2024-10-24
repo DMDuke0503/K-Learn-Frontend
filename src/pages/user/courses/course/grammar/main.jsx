@@ -25,7 +25,7 @@ const Grammar = () => {
     return (
         <div className="w-screen h-screen flex flex-col font-montserrat">
             <Header></Header>
-            <div className="h-[90vh] flex">
+            <div className="flex" style={{height: "calc(100vh - 70px)"}}>
                 {cookies.authorization? <NavigationBar></NavigationBar> : <GuestNavigationBar></GuestNavigationBar>}
                 <GrammarLesson></GrammarLesson>
             </div>

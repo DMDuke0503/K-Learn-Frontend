@@ -4,36 +4,30 @@ import { useState, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
 import axios from 'axios';
 
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-
 const GrammarLesson = () => {
     const { state } = useLocation();
     const [listLesson, setListLesson] = useState([]);
     const [cookies] = useCookies('authorization');
+
+    const handleListLesson = async () => {
+        try {
+            const res = await axios({
+                method: "GET",
+                url: `http://localhost:8080/api/mycourse/grammar/${state.parent_course.id}/progress`,
+                headers: {
+                    Authorization: `Bearer ${cookies.authorization}`
+                }
+            })
+
+            console.log(res.data);
+            setListLesson(res.data.list_lesson);
+        } catch (err) {
+            console.log(err);
+        }
+    }
     
     useEffect(() => {
-        axios({
-            method: "GET",
-            url: `http://localhost:8080/api/mycourse/grammar/${state.parent_course.id}/progress `,
-            headers: {
-                Authorization: `Bearer ${cookies.authorization}`
-            }
-        })
-        .then(res => {
-            console.log(res.data);
-
-            setListLesson(res.data.list_lesson);
-        })
-        .catch(err => {
-            console.log(err);
-        });
+        handleListLesson();
     }, []);
 
     return (
@@ -52,7 +46,7 @@ const GrammarLesson = () => {
                 <div className="w-full flex flex-col space-y-5 overflow-y-scroll">
                     <p className="pt-5 font-extrabold text-2xl text-nowrap">{"Ngữ Pháp " + state.parent_course.course_name}</p>
                     <p className="font-extrabold text-xl">Bài Học</p>
-                    {listLesson.map((grammar) => 
+                    {listLesson?.map((grammar) => 
                         <Link 
                             to={cookies.authorization? "./learn" : "/login"} 
                             key={grammar.id} 
