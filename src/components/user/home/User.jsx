@@ -22,11 +22,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import NavigationBar from "@/components/user/NavigationBar";
 
 import { Bell, EllipsisVertical, LogOut } from "lucide-react";
+import { set } from "date-fns";
 
 const HomeUser = () => {
     const [cookies, setCookie, removeCookie] = useCookies(['authorization']);
     const [user, setUser] = useState({});
     const [courses, setCourses] = useState([]);
+    const [topics, setTopics] = useState([]);
+    const [progress, setProgress] = useState([]);
     const navigate = useNavigate();
 
     const handleLogin = () => {
@@ -34,36 +37,63 @@ const HomeUser = () => {
         navigate(0);
     }
 
-    useEffect(() => {
-        if (cookies.authorization) {
-            axios({
+    const handleUser = async () => {
+        try {
+            const res = await axios({
                 method: "GET",
                 url: "http://localhost:8080/api/user/profile",
                 headers: {
                     "Authorization": `Bearer ${cookies.authorization}`,
                 }
             })
-            .then((res) => {
-                console.log(res);
-    
-                setUser(res.data);
-            })
-            .catch((err) => {
-                console.log(err);
-            });
-        }
+            
+            console.log(res.data);
 
+            setUser(res.data);
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    const handleTopic = async (user_id) => {
+        try {
+            const res = await axios({
+                method: "GET",
+                url: `http://localhost:8080/api/homepage/${user_id}`,
+                headers: {
+                    Authorization: `Bearer ${cookies.authorization}`,
+                },
+            });
+
+            setTopics(res.data.topic_section);
+            setProgress(res.data.progress_section);
+            console.log(res.data);
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    useEffect(() => {
         axios({
             method: "GET",
             url: "http://localhost:8080/api/course",
-        })
-        .then(res => {
+            headers: {
+                Authorization: `Bearer ${cookies.authorization}`,
+            },
+        }).then((res) => {
             setCourses(res.data);
-        })
-        .catch(err => {
+        }).catch((err) => {
             console.log(err);
-        });
-    }, []);
+        })
+
+        handleUser();
+    }, []); // Initial call to fetch user data
+    
+    useEffect(() => {
+        if (user.id) {
+            handleTopic(user.id);
+        }
+    }, [user]); // Call handleTopic only when the user state is updated
 
     return (
         <>
@@ -75,77 +105,53 @@ const HomeUser = () => {
                 <div className="w-full flex flex-col justify-self-start">
                     <Carousel className="py-5">
                         <div className="flex justify-between items-center">
-                            <p className="font-montserrat font-semibold text-lg">Học thử miễn phí</p>
+                            <p className="font-montserrat font-semibold text-lg">Chủ đề</p>
                             <div className="space-x-2">
                                 <CarouselPrevious />
                                 <CarouselNext />
                             </div>
                         </div>
                         <CarouselContent className="h-fit">
-                            <CarouselItem className="basis-1/3 my-2">
-                            <Link 
-                                to="/courses/1/vocab" 
-                                state={{
-                                    parent_course: courses[0]
-                                }}
-                                className="w-full h-auto flex flex-col rounded-xl p-5 space-y-2" 
-                                style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
-                                >
-                                    <img src="course_image.png" alt="" className="w-full h-auto py-3" />
-                                    <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
-                                        <p>HỌC</p>
-                                    </div>
-                                    <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng Tiếng Hàn Sơ Cấp - Trường Học</p>
-                                </Link>
-                            </CarouselItem>
-                            <CarouselItem className="basis-1/3 my-2">
-                            <Link 
-                                to="/courses/1/vocab" 
-                                state={{
-                                    parent_course: courses[0]
-                                }}
-                                className="w-full h-auto flex flex-col rounded-xl p-5 space-y-2" 
-                                style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
-                                >
-                                    <img src="course_image.png" alt="" className="w-full h-auto py-3" />
-                                    <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
-                                        <p>HỌC</p>
-                                    </div>
-                                    <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng Tiếng Hàn Sơ Cấp - Trường Học</p>
-                                </Link>
-                            </CarouselItem>
-                            <CarouselItem className="basis-1/3 my-2">
-                            <Link 
-                                to="/courses/1/vocab" 
-                                state={{
-                                    parent_course: courses[0]
-                                }}
-                                className="w-full h-auto flex flex-col rounded-xl p-5 space-y-2" 
-                                style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
-                                >
-                                    <img src="course_image.png" alt="" className="w-full h-auto py-3" />
-                                    <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
-                                        <p>HỌC</p>
-                                    </div>
-                                    <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng Tiếng Hàn Sơ Cấp - Trường Học</p>
-                                </Link>
-                            </CarouselItem>
-                            <CarouselItem className="basis-1/3 my-2">
-                            <Link 
-                                to="/courses/1/vocab" 
-                                state={{
-                                    parent_course: courses[0]
-                                }}
-                                className="w-full h-auto flex flex-col rounded-xl p-5 space-y-2" 
-                                style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
-                                >
-                                    <img src="course_image.png" alt="" className="w-full h-auto py-3" />
-                                    <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
-                                        <p>HỌC</p>
-                                    </div>
-                                    <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng Tiếng Hàn Sơ Cấp - Trường Học</p>
-                                </Link>
-                            </CarouselItem>
+                            {
+                                topics.grammar?.map((lesson, index) => (
+                                    <CarouselItem key={index} className="basis-1/3 my-2">
+                                        <Link 
+                                            to={`courses/${lesson.course_id}/grammar`}
+                                            state={{
+                                                parent_course: courses[lesson.course_id - 1]
+                                            }}
+                                            className="w-full h-[400px] flex flex-col rounded-xl p-5 space-y-2" 
+                                            style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
+                                            >
+                                                <img src="course_image.png" alt="" className="w-full h-auto py-3" />
+                                                <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
+                                                    <p>HỌC</p>
+                                                </div>
+                                                <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Ngữ Pháp {lesson.course_name} - Bài {lesson.grammar_lesson_number}: {lesson.grammar_name}</p>
+                                        </Link>
+                                    </CarouselItem>
+                                )
+                            )}
+                            {
+                                topics.topic_vocab?.map((topic, index) => (
+                                    <CarouselItem key={index} className="basis-1/3 my-2">
+                                        <Link 
+                                            to={`courses/${topic.course_id}/vocab`}
+                                            state={{
+                                                parent_course: courses[0]
+                                            }}
+                                            className="w-full h-[400px] flex flex-col rounded-xl p-5 space-y-2" 
+                                            style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
+                                            >
+                                                <img src="course_image.png" alt="" className="w-full h-auto py-3" />
+                                                <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
+                                                    <p>HỌC</p>
+                                                </div>
+                                                <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng {topic.course_name} - Chủ đề {topic.topic_name}</p>
+                                        </Link>
+                                    </CarouselItem>
+                                )
+                            )}
                         </CarouselContent>
                     </Carousel>
                 </div>
@@ -159,50 +165,46 @@ const HomeUser = () => {
                             </div>
                         </div>
                         <CarouselContent className="h-fit">
-                            <CarouselItem className="basis-1/3 my-2">
-                                <div className="w-full h-auto flex flex-col rounded-xl p-5 space-y-2" style={{boxShadow: "0px 14px 40px 0px #080F340F"}}>
-                                    <img src="course_image.png" alt="" className="w-full h-auto py-3" />
-                                    <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
-                                        <p>TIẾP TỤC</p>
-                                    </div>
-                                    <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng Tiếng Hàn Sơ Cấp - Trường Học</p>
-                                    <Progress value={33} />
-                                    <p>33%</p>
-                                </div>
-                            </CarouselItem>
-                            <CarouselItem className="basis-1/3 my-2">
-                                <div className="w-full h-auto flex flex-col rounded-xl p-5 space-y-2" style={{boxShadow: "0px 14px 40px 0px #080F340F"}}>
-                                    <img src="course_image.png" alt="" className="w-full h-auto py-3" />
-                                    <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
-                                        <p>TIẾP TỤC</p>
-                                    </div>
-                                    <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng Tiếng Hàn Sơ Cấp - Trường Học</p>
-                                    <Progress value={33} />
-                                    <p>33%</p>
-                                </div>
-                            </CarouselItem>
-                            <CarouselItem className="basis-1/3 my-2">
-                                <div className="w-full h-auto flex flex-col rounded-xl p-5 space-y-2" style={{boxShadow: "0px 14px 40px 0px #080F340F"}}>
-                                    <img src="course_image.png" alt="" className="w-full h-auto py-3" />
-                                    <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
-                                        <p>TIẾP TỤC</p>
-                                    </div>
-                                    <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng Tiếng Hàn Sơ Cấp - Trường Học</p>
-                                    <Progress value={33} />
-                                    <p>33%</p>
-                                </div>
-                            </CarouselItem>
-                            <CarouselItem className="basis-1/3 my-2">
-                                <div className="w-full h-auto flex flex-col rounded-xl p-5 space-y-2" style={{boxShadow: "0px 14px 40px 0px #080F340F"}}>
-                                    <img src="course_image.png" alt="" className="w-full h-auto py-3" />
-                                    <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
-                                        <p>TIẾP TỤC</p>
-                                    </div>
-                                    <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng Tiếng Hàn Sơ Cấp - Trường Học</p>
-                                    <Progress value={33} />
-                                    <p>33%</p>
-                                </div>
-                            </CarouselItem>
+                            {
+                                progress.grammar?.map((lesson, index) => (
+                                    <CarouselItem key={index} className="basis-1/3 my-2">
+                                        <Link 
+                                            to={`courses/${lesson.course_id}/grammar`}
+                                            state={{
+                                                parent_course: courses[lesson.course_id - 1]
+                                            }}
+                                            className="w-full h-[400px] flex flex-col rounded-xl p-5 space-y-2" 
+                                            style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
+                                            >
+                                                <img src="course_image.png" alt="" className="w-full h-auto py-3" />
+                                                <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
+                                                    <p>HỌC</p>
+                                                </div>
+                                                <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Ngữ Pháp {lesson.course_name} - Bài {lesson.grammar_lesson_number}: {lesson.grammar_name}</p>
+                                        </Link>
+                                    </CarouselItem>
+                                )
+                            )}
+                            {
+                                progress.vocab?.map((topic, index) => (
+                                    <CarouselItem key={index} className="basis-1/3 my-2">
+                                        <Link 
+                                            to={`courses/${topic.course_id}/vocab`}
+                                            state={{
+                                                parent_course: courses[topic.course_id - 1]
+                                            }}
+                                            className="w-full h-[400px] flex flex-col rounded-xl p-5 space-y-2" 
+                                            style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
+                                            >
+                                                <img src="course_image.png" alt="" className="w-full h-auto py-3" />
+                                                <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
+                                                    <p>HỌC</p>
+                                                </div>
+                                                <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng {topic.course_name} - Chủ đề {topic.topic_name}</p>
+                                        </Link>
+                                    </CarouselItem>
+                                )
+                            )}
                         </CarouselContent>
                     </Carousel>
                 </div>
