@@ -14,7 +14,6 @@ const GrammarLearn = () => {
     const navigate = useNavigate();
     const [grammarLesson, setGrammarLesson] = useState(state.grammar);
     const [isQuiz, setIsQuiz] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
     const [cookies] = useCookies('authorization');
     const [progress, setProgress] = useState({});
     const [listLesson, setListLesson] = useState([]);
@@ -23,6 +22,8 @@ const GrammarLearn = () => {
     const [gradingResults, setGradingResults] = useState(null);
     const [correctCount, setCorrectCount] = useState(0);
     const [pass, setPass] = useState(false);
+    const [isDone, setIsDone] = useState(false);
+    const [text, setText] = useState("");
 
     const getGrammarProgress = async () => {
         try {
@@ -41,7 +42,7 @@ const GrammarLearn = () => {
         }
     };
 
-    const gradeQuiz = () => {
+    const gradeQuiz = async () => {
         if (!grammarLesson.quiz) return;
     
         const results = grammarLesson.quiz.questions.map((question, index) => {
@@ -59,9 +60,37 @@ const GrammarLearn = () => {
 
         const numberOfCorrectAnswers = results.filter(result => result.isCorrect).length;
 
-        setCorrectCount(numberOfCorrectAnswers);
+        setCorrectCount(numberOfCorrectAnswers);    
 
         setPass(numberOfCorrectAnswers / results.length >= 0.8);
+
+        if (numberOfCorrectAnswers / results.length >= 0.8) {
+            try {
+                const res = await axios({
+                    method: 'PATCH',
+                    url: `http://localhost:8080/api/grammar_progress/mark_grammar_quiz/${grammarLesson.id}/${state.parent_course.id}`,
+                    headers: {
+                        'Authorization': `Bearer ${cookies.authorization}`
+                    }
+                });
+                console.log(res.data);
+            } catch (err) {
+                console.log(err);
+            }
+        } else {
+            try {
+                const res = await axios({
+                    method: 'PATCH',
+                    url: `http://localhost:8080/api/grammar_progress/mark_grammar_quiz_failed/${grammarLesson.id}/${state.parent_course.id}`,
+                    headers: {
+                        'Authorization': `Bearer ${cookies.authorization}`
+                    }
+                });
+                console.log(res.data);
+            } catch (err) {
+                console.log(err);
+            }
+        }
     };
 
     const handleAnswer = (index, answer) => {
@@ -81,8 +110,45 @@ const GrammarLearn = () => {
 
     const handleRedoQuiz = () => {
         setGradingResults(null);
-        setListAnswer(Array(grammarLesson.quiz.questions.length).fill(null));
+        setListAnswer(Array(grammarLesson.quiz.questions.length).fill(""));
         setSelectedAnswers(Array(grammarLesson.quiz.questions.length).fill(null));
+        setGrammarLesson(listLesson[grammarLesson.lesson - 1]);   
+    }
+
+    const handleDoneLesson = async (grammar_id, course_id) => {
+        try {
+            const res = await axios({
+                method: 'PATCH',
+                url: `http://localhost:8080/api/grammar_progress/mark_learned_theory/${grammar_id}/${course_id}`,
+                headers: {
+                    Authorization: `Bearer ${cookies.authorization}`
+                }
+            });
+
+            setIsDone(true);
+
+            console.log(res.data);
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    const handleDoneQuiz = async (grammar_id, course_id) => {
+        try {
+            const res = await axios({
+                method: 'PATCH',
+                url: `http://localhost:8080/api/grammar_progress/mark_grammar_quiz/${grammar_id}/${course_id}`,
+                headers: {
+                    Authorization: `Bearer ${cookies.authorization}`
+                }
+            });
+
+            setIsDone(true);
+
+            console.log(res.data);
+        } catch (err) {
+            console.log(err);
+        }
     }
 
     const handlePrevGrammarLesson = () => {
@@ -90,6 +156,11 @@ const GrammarLearn = () => {
         if (grammarLesson.lesson > 1) {
             setGrammarLesson(listLesson[grammarLesson.lesson - 2]);
             console.log(grammarLesson);
+        }
+        setGradingResults(null);
+        if ('quiz' in grammarLesson) {
+            setSelectedAnswers(Array(grammarLesson.quiz.questions.length).fill(null));
+            setListAnswer(Array(grammarLesson.quiz.questions.length).fill(null));
         }
     }
 
@@ -101,7 +172,13 @@ const GrammarLearn = () => {
                 } else {
                     setIsQuiz(false);
                     setGradingResults(null);
+                    if ('quiz' in grammarLesson) {
+                        setSelectedAnswers(Array(grammarLesson.quiz.questions.length).fill(null));
+                        setListAnswer(Array(grammarLesson.quiz.questions.length).fill(null));
+                    }
+                    handleDoneLesson(grammarLesson.id, state.parent_course.id);
                     setGrammarLesson(listLesson[grammarLesson.lesson]);
+                    setIsDone(false);
                     console.log(grammarLesson);
                 }
             } else {
@@ -111,7 +188,11 @@ const GrammarLearn = () => {
                     setIsQuiz(false);
                     setGradingResults(null);
                     setSelectedAnswers(Array(grammarLesson.quiz.questions.length).fill(null));
+                    setListAnswer(Array(grammarLesson.quiz.questions.length).fill(null));
+                    handleDoneQuiz(grammarLesson.id, state.parent_course.id);
+                    handleDoneLesson(grammarLesson.id, state.parent_course.id);
                     setGrammarLesson(listLesson[grammarLesson.lesson]);
+                    setIsDone(false);
                     console.log(grammarLesson);
                 }
             }
@@ -122,6 +203,12 @@ const GrammarLearn = () => {
                 } else {
                     setIsQuiz(false);
                     setGradingResults(null);
+                    if ('quiz' in grammarLesson) {
+                        setSelectedAnswers(Array(grammarLesson.quiz.questions.length).fill(null));
+                        setListAnswer(Array(grammarLesson.quiz.questions.length).fill(null));
+                    }
+                    handleDoneLesson(grammarLesson.id, state.parent_course.id);
+                    setIsDone(false);
                     navigate("..", { state: { parent_course: state.parent_course }, relative: "path" });
                     console.log(grammarLesson);
                 }
@@ -132,10 +219,14 @@ const GrammarLearn = () => {
                     setIsQuiz(false);
                     setGradingResults(null);
                     setSelectedAnswers(Array(grammarLesson.quiz.questions.length).fill(null));
+                    setListAnswer(Array(grammarLesson.quiz.questions.length).fill(null));
+                    handleDoneLesson(grammarLesson.id, state.parent_course.id);
+                    handleDoneQuiz(grammarLesson.id, state.parent_course.id);
+                    setIsDone(false);
                     navigate("..", { state: { parent_course: state.parent_course }, relative: "path" });
                     console.log(grammarLesson);
                 }
-            }
+            } 
         }
     };
 
@@ -145,16 +236,13 @@ const GrammarLearn = () => {
         setGradingResults(null);
         if ('quiz' in grammarLesson) {
             setSelectedAnswers(Array(grammarLesson.quiz.questions.length).fill(null));
+            setListAnswer(Array(grammarLesson.quiz.questions.length).fill(null));
         }
     }
 
     useEffect(() => {
-        setIsLoading(true);
         getGrammarProgress();
-        setIsLoading(false);
-
-        console.log(state.grammar);
-    }, []);
+    }, [isDone, grammarLesson, listAnswer]);
 
     return (
         <div className="w-screen h-screen flex flex-col font-montserrat">
@@ -186,10 +274,6 @@ const GrammarLearn = () => {
                                                     <p>Trạng thái:</p>
                                                     <p>{(correctCount / listAnswer.length) < 0.8? "KHÔNG ĐẠT": "ĐẠT"}</p>
                                                 </div>
-                                                <div className="flex space-x-2 font-semibold">
-                                                    <p>Lần thi:</p>
-                                                    <p>1/Không giới hạn</p>
-                                                </div>
                                             </div>
                                             <button onClick={() => handleRedoQuiz()} className="w-1/5 h-[40px] bg-[#FDF24E] rounded-xl font-semibold">Làm lại</button>
                                         </div>
@@ -209,37 +293,35 @@ const GrammarLearn = () => {
                                                     {
                                                         question.type === 'multichoice'? 
                                                         <div className="w-full flex flex-col items-center space-y-5">
-                                                            <div className="w-[90%] flex justify-between">
+                                                            <div className="grid grid-cols-2 gap-x-[100px] gap-y-5 min-w-full mx-auto">
                                                                 <button
                                                                     onClick={() => handleAnswer(index, question.options[0])}
-                                                                    className={`w-1/3 h-[50px] border border-black rounded-xl ${selectedAnswers[index] === question.options[0]? (gradingResults? (gradingResults[index].isCorrect? (gradingResults[index].userAnswer === question.options[0]? "bg-[#1EF265A8]": ""): "bg-[#F51C1F]"): "bg-yellow-300") : (gradingResults? (gradingResults[index].correctAnswer === question.options[0]? "bg-[#1EF265A8]": ""): "bg-white")}`}
+                                                                    className={`w-full h-[100px] p-3 border border-black rounded-xl text-center ${selectedAnswers[index] === question.options[0]? (gradingResults? (gradingResults[index].isCorrect? (gradingResults[index].userAnswer === question.options[0]? "bg-[#1EF265A8]": ""): "bg-[#F51C1F]"): "bg-yellow-300") : (gradingResults? (gradingResults[index].correctAnswer === question.options[0]? "bg-[#1EF265A8]": ""): "bg-white")}`}
                                                                 >
                                                                     {question.options[0]}
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleAnswer(index, question.options[1])}
-                                                                    className={`w-1/3 h-[50px] border border-black rounded-xl ${selectedAnswers[index] === question.options[1]? (gradingResults? (gradingResults[index].isCorrect? (gradingResults[index].userAnswer === question.options[1]? "bg-[#1EF265A8]": ""): "bg-[#F51C1F]"): "bg-yellow-300") : (gradingResults? (gradingResults[index].correctAnswer === question.options[1]? "bg-[#1EF265A8]": ""): "bg-white")}`}
+                                                                    className={`w-full h-[100px] p-3 border border-black rounded-xl text-center ${selectedAnswers[index] === question.options[1]? (gradingResults? (gradingResults[index].isCorrect? (gradingResults[index].userAnswer === question.options[1]? "bg-[#1EF265A8]": ""): "bg-[#F51C1F]"): "bg-yellow-300") : (gradingResults? (gradingResults[index].correctAnswer === question.options[1]? "bg-[#1EF265A8]": ""): "bg-white")}`}
                                                                 >
                                                                     {question.options[1]}
                                                                 </button>
-                                                            </div>
-                                                            <div className="w-[90%] flex justify-between">
                                                                 <button
                                                                     onClick={() => handleAnswer(index, question.options[2])}
-                                                                    className={`w-1/3 h-[50px] border border-black rounded-xl ${selectedAnswers[index] === question.options[2]? (gradingResults? (gradingResults[index].isCorrect? (gradingResults[index].userAnswer === question.options[2]? "bg-[#1EF265A8]": ""): "bg-[#F51C1F]"): "bg-yellow-300") : (gradingResults? (gradingResults[index].correctAnswer === question.options[2]? "bg-[#1EF265A8]": ""): "bg-white")}`}
+                                                                    className={`w-full h-[100px] p-3 border border-black rounded-xl text-center ${selectedAnswers[index] === question.options[2]? (gradingResults? (gradingResults[index].isCorrect? (gradingResults[index].userAnswer === question.options[2]? "bg-[#1EF265A8]": ""): "bg-[#F51C1F]"): "bg-yellow-300") : (gradingResults? (gradingResults[index].correctAnswer === question.options[2]? "bg-[#1EF265A8]": ""): "bg-white")}`}
                                                                 >
                                                                     {question.options[2]}
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleAnswer(index, question.options[3])}
-                                                                    className={`w-1/3 h-[50px] border border-black rounded-xl ${selectedAnswers[index] === question.options[3]? (gradingResults? (gradingResults[index].isCorrect? (gradingResults[index].userAnswer === question.options[3]? "bg-[#1EF265A8]": ""): "bg-[#F51C1F]"): "bg-yellow-300") : (gradingResults? (gradingResults[index].correctAnswer === question.options[3]? "bg-[#1EF265A8]": ""): "bg-white")}`}
+                                                                    className={`w-full h-[100px] p-3 border border-black rounded-xl text-center ${selectedAnswers[index] === question.options[3]? (gradingResults? (gradingResults[index].isCorrect? (gradingResults[index].userAnswer === question.options[3]? "bg-[#1EF265A8]": ""): "bg-[#F51C1F]"): "bg-yellow-300") : (gradingResults? (gradingResults[index].correctAnswer === question.options[3]? "bg-[#1EF265A8]": ""): "bg-white")}`}
                                                                 >
                                                                     {question.options[3]}
                                                                 </button>
                                                             </div>
                                                         </div>: 
                                                         <div className="w-full">
-                                                            <textarea onChange={(e) => handleAnswer(index, e.target.value)} placeholder="Nhập ..." className="w-full h-[100px] p-3 border border-black rounded-xl"></textarea>
+                                                            <textarea value={listAnswer[index]} onChange={(e) => handleAnswer(index, e.target.value)} placeholder="Nhập ..." className="w-full h-[100px] p-3 border border-black rounded-xl"></textarea>
                                                         </div>
                                                     }
                                                 </div>
@@ -272,7 +354,7 @@ const GrammarLearn = () => {
                         <div className="w-full pl-5 pt-5 flex flex-col space-y-5 overflow-y-scroll">
                             {
                                 listLesson.map(lesson => 
-                                    <div onClick={() => handleNav(lesson.lesson)} key={lesson.lesson} className="">
+                                    <button onClick={() => handleNav(lesson.lesson)} key={lesson.lesson} className="">
                                         <div className="w-full flex flex-col items-end">
                                             <div className={`w-full flex justify-between items-center ${grammarLesson.lesson === lesson.lesson? "bg-[#FFF9D0]": ""}`}>
                                                 <div className="w-[90%] p-5 space-x-2 flex">
@@ -280,33 +362,33 @@ const GrammarLearn = () => {
                                                     <p className="text-xl text-wrap">{lesson.name}</p>
                                                 </div>
                                                 <div className="w-[10%]">
-                                                    <CircleCheck size={25}></CircleCheck>
+                                                    <CircleCheck size={25} className={`${lesson.learned && "text-[#1EF265A8]"}`}></CircleCheck>
                                                 </div>
                                             </div>
                                             <div className={`w-full flex justify-end bg-[#FFFFFF] ${'theory' in lesson? "": "hidden"}`}>
                                                 <div className="w-[10%] bg-[#F3F4F6]">
 
                                                 </div>
-                                                <div className="w-[80%] py-5">
+                                                <div className="w-[80%] py-5 flex">
                                                     <p className="ml-3 font-semibold text-xl">Lý thuyết</p>
                                                 </div>
                                                 <div className="w-[10%] py-5">
-                                                    <CircleCheck size={25}></CircleCheck>
+                                                    <CircleCheck size={25} className={`${lesson.theory.learned && "text-[#1EF265A8]"}`}></CircleCheck>
                                                 </div>
                                             </div>
                                             <div className={`w-full flex justify-end ${'quiz' in lesson? "": "hidden"}`}>
                                                 <div className="w-[10%] bg-[#F3F4F6]">
 
                                                 </div>
-                                                <div className="w-[80%] py-5">
+                                                <div className="w-[80%] py-5 flex">
                                                     <p className="ml-3 font-semibold text-xl">QUIZ - Yêu cầu đạt 80%</p>
                                                 </div>
                                                 <div className="w-[10%] py-5">
-                                                    <CircleCheck size={25}></CircleCheck>
+                                                    <CircleCheck size={25} className={`${!lesson.quiz?.passed? (lesson.quiz?.failed? "text-[#F51C1F]": ""): "text-[#1EF265A8]"}`}></CircleCheck>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </button>
                                 )
                             }
                         </div>

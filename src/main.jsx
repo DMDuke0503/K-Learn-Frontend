@@ -21,6 +21,11 @@ import Transaction from './pages/admin/transaction/main';
 import User from './pages/admin/user/main';
 import ContentManagement from './pages/content/courses/main';
 import OAuth2RedirectHandler from './pages/login/OAuth/OAuth2RedirectHandler';
+import Payment from './pages/user/payment/main';
+import PaymentResult from './pages/user/payment/PaymentResult';
+import UserTransaction from './pages/user/transaction/main';
+import DetailUserTransaction from './pages/user/transaction/detail/main';
+
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { vi } from 'date-fns/locale';
@@ -81,6 +86,22 @@ const router = createBrowserRouter([
   {
     path: "/oauth2/redirect", // Add this route for handling OAuth2 redirects
     Component: OAuth2RedirectHandler,
+  },
+  {
+    path: "/payment",
+    Component: Payment,
+  },
+  {
+    path: "/vnpay-payment",
+    Component: PaymentResult,
+  },
+  {
+    path: "/transaction",
+    Component: UserTransaction,
+  },
+  {
+    path: "/transaction/:id",
+    Component: DetailUserTransaction,
   },
 ]);
 

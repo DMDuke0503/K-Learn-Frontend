@@ -2,18 +2,21 @@ import { Link, useLocation } from 'react-router-dom';
 import { X, Heart, Volume2, Loader, Check } from 'lucide-react';
 import { useCookies } from 'react-cookie';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 import { Progress } from '@/components/ui/progress';
 
 import Header from '@/components/Header';
 import SmallNavigationBar from '@/components/user/SmallNavigationBar';
-import { set } from 'date-fns';
 
 const VocabLearn = () => {
     const { state } = useLocation();
+    const navigate = useNavigate();
     const [cookies] = useCookies('authorization');
     const [notLearnedVocabs, setNotLearnedVocabs] = useState([]);
+    const [learnedVocabs, setLearnedVocabs] = useState([]);
+    const [vocabs, setVocabs] = useState([]);
     const [quiz, setQuiz] = useState([]);
     const [progress, setProgress] = useState(0);
     const [vocabIndex, setVocabIndex] = useState(0);
@@ -31,7 +34,7 @@ const VocabLearn = () => {
         try {
             const res = await axios({
                 method: "GET",
-                url: `http://localhost:8080/api/vocabulary_progress/not_learned/${state.topic.id}`,
+                url: `http://localhost:8080/api/vocabulary_progress/not_learned/${state.topic.topic_id}`,
                 headers: {
                     Authorization: `Bearer ${cookies.authorization}`
                 }
@@ -43,11 +46,27 @@ const VocabLearn = () => {
         }
     }
 
+    const getLearnedVocabs = async () => {
+        try {
+            const res = await axios({
+                method: "GET",
+                url: `http://localhost:8080/api/vocabulary_progress/learned/${state.topic.topic_id}`,
+                headers: {
+                    Authorization: `Bearer ${cookies.authorization}`
+                }
+            });
+            setLearnedVocabs(res.data);
+            console.log(res.data);
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
     const getProgress = async () => {
         try {
             const res = await axios({
                 method: "GET",
-                url: `http://localhost:8080/api/vocabulary_progress/progress/${state.topic.id}`,
+                url: `http://localhost:8080/api/vocabulary_progress/progress/${state.topic.topic_id}`,
                 headers: {
                     Authorization: `Bearer ${cookies.authorization}`
                 }
@@ -62,7 +81,7 @@ const VocabLearn = () => {
         try {
             const res = await axios({
                 method: "GET",
-                url: `http://localhost:8080/api/quiz/vocabulary/${state.topic.id}`,
+                url: `http://localhost:8080/api/quiz/vocabulary/${state.topic.topic_id}`,
                 headers: {
                     Authorization: `Bearer ${cookies.authorization}`
                 }
@@ -75,29 +94,30 @@ const VocabLearn = () => {
     }
 
     const handlePrevQuestion = () => {
+        console.log(vocabIndex);
         if (vocabIndex > 0) {
-            setVocabIndex(vocabIndex - 1);
+            setVocabIndex(vocabIndex - 1)
         }
-    }
-
+    };
+    
     const handleNextQuestion = () => {
-        if (vocabIndex < notLearnedVocabs.length - 1) {
-            if (vocabIndex < 4) {
-                setVocabIndex(vocabIndex + 1);
-            } else {
+        setVocabIndex((prevIndex) => {
+            if (prevIndex === vocabs.length - 1 && progress === 1) {
+                navigate(`/courses/${state.parent_course.id}/vocab`, {state: {parent_course: state.parent_course}, relative: "path"});
+                return prevIndex;
+            }
+    
+            const newIndex = prevIndex + 1;
+    
+            if ((newIndex >= learnedVocabs.length && (newIndex - learnedVocabs.length) % 5 === 0 && newIndex !== learnedVocabs.length) || (newIndex === vocabs.length)) {
                 setIsQuiz(true);
                 setNextQuiz(false);
-                setVocabIndex(0);
+                return learnedVocabs.length;
             }
-        } else if (vocabIndex === notLearnedVocabs.length - 1) {
-            setNextQuiz(false);
-            setIsQuiz(true);
-            setVocabIndex(0);
-        } else {
-            setIsQuiz(false);
-            setNextQuiz(false);
-        }
-    }
+
+            return newIndex;
+        });
+    };
 
     const handleChange = (e) => {
         setAnswer(e.target.value);
@@ -113,7 +133,7 @@ const VocabLearn = () => {
                 setCount(0);
                 await axios({
                     method: "PATCH",
-                    url: `http://localhost:8080/api/vocabulary_progress/mark/topic/${state.topic.id}/vocabulary/${quiz[quizIndex].vocabulary_id}`,
+                    url: `http://localhost:8080/api/vocabulary_progress/mark-proficient/topic/${state.topic.topic_id}/vocabulary/${quiz[quizIndex].vocabulary_id}`,
                     headers: {
                         Authorization: `Bearer ${cookies.authorization}`
                     },
@@ -130,6 +150,20 @@ const VocabLearn = () => {
             setCorrect(false);
             if (quiz[quizIndex].type === "essay") {
                 setCount(0);
+                await axios({
+                    method: "PATCH",
+                    url: `http://localhost:8080/api/vocabulary_progress/mark-not-proficient/topic/${state.topic.topic_id}/vocabulary/${quiz[quizIndex].vocabulary_id}`,
+                    headers: {
+                        Authorization: `Bearer ${cookies.authorization}`
+                    },
+                    data: {}
+                })
+                .then(res => {
+                    console.log(res);
+                })
+                .catch(err => {
+                    console.log(err);
+                })
             }
         }
         setNextQuiz(true);
@@ -147,6 +181,7 @@ const VocabLearn = () => {
                 setQuizIndex(0);
                 setCorrectAnswerIndex(null);
                 getNotLearnedVocabs();
+                getLearnedVocabs();
                 getQuiz();
                 getProgress();
             }
@@ -155,6 +190,7 @@ const VocabLearn = () => {
             setQuizIndex(0);
             setCorrectAnswerIndex(null);
             getNotLearnedVocabs();
+            getLearnedVocabs();
             getQuiz();
             getProgress();
         }
@@ -166,12 +202,20 @@ const VocabLearn = () => {
         value.lang = "ko-KR";
         res.speak(value);
     }
-
+    
     useEffect(() => {
         getNotLearnedVocabs();
+        getLearnedVocabs();
         getProgress();
         getQuiz();
     }, []);
+    
+    useEffect(() => {
+        if (learnedVocabs.length > 0 || notLearnedVocabs.length > 0) {
+            setVocabs(learnedVocabs.concat(notLearnedVocabs));
+            setVocabIndex(notLearnedVocabs.length? learnedVocabs.length: (notLearnedVocabs.length + learnedVocabs.length - 1));
+        }
+    }, [learnedVocabs, notLearnedVocabs]);
 
     return (
         <div className="w-screen h-screen flex flex-col font-montserrat">
@@ -200,16 +244,16 @@ const VocabLearn = () => {
                                 <div className="w-full h-[80%] flex justify-center rounded-2xl p-5" style={{ border: "1px solid #000000" }}>
                                     <div className="w-[90%] h-full flex flex-col items-center">
                                         <div className="w-full h-[25%]">
-                                            <p className="font-extrabold text-6xl">{quiz[quizIndex]?.word || '...'}</p>
+                                            <p className="font-extrabold text-6xl">{quiz[quizIndex]?.word}</p>
                                         </div>
                                         <div className="w-full h-[75%] space-y-8">
                                             <p className="w-full h-[10%] font-semibold text-xl">Chọn đáp án đúng</p>
                                             <div className="w-full h-[90%] flex flex-col items-center">
-                                                <div className="h-[45%] w-full flex justify-between">
-                                                    <div className="h-1/2 w-1/2 flex space-x-5">
+                                                <div className="w-full h-full grid grid-cols-2 gap-x-[100px] gap-y-5 max-w-full mx-auto">
+                                                    <div className="flex space-x-5">
                                                         <button
                                                             className={
-                                                                `w-3/5 h-full px-10 py-3 border border-black rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 0? (correct? "bg-[#1EF265A8]": "bg-[#F51C1F]"): (correctAnswerIndex == 0? "bg-[#1EF265A8]": "")}`
+                                                                `w-4/5 h-[100px] p-3 truncate border border-black rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 0? (correct? "bg-[#1EF265A8]": "bg-[#F51C1F]"): (correctAnswerIndex == 0? "bg-[#1EF265A8]": "")}`
                                                             }
                                                             {...(nextQuiz? { disabled: true }: {})}
                                                             onClick={() => handleQuizAnswer(quiz[quizIndex]?.options[0], 0)}
@@ -218,26 +262,26 @@ const VocabLearn = () => {
                                                             correct? 
                                                             <Check 
                                                                 className={
-                                                                    `w-1/5 h-full text-[#1EF265A8] ${answerIndex == 0? "": "invisible"}`
+                                                                    `w-1/5 h-fit text-[#1EF265A8] ${answerIndex == 0? "": "invisible"}`
                                                                 }
                                                             ></Check>:
                                                             correctAnswerIndex == 0?
                                                             <Check
                                                                 className={
-                                                                    `w-1/5 h-full text-[#1EF265A8]`
+                                                                    `w-1/5 h-fit text-[#1EF265A8]`
                                                                 }
                                                             ></Check>:
                                                             <X
                                                                 className={
-                                                                    `w-1/5 h-full text-[#F51C1F] ${answerIndex == 0? "": "invisible"}`
+                                                                    `w-1/5 h-fit text-[#F51C1F] ${answerIndex == 0? "": "invisible"}`
                                                                 }
                                                             ></X>
                                                         }
                                                     </div>
-                                                    <div className="h-1/2 w-1/2 flex justify-end space-x-5">
+                                                    <div className="flex space-x-5">
                                                         <button
                                                             className={
-                                                                `w-3/5 h-full px-10 py-3 border border-black rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 1? (correct? "bg-[#1EF265A8]": "bg-[#F51C1F]"): (correctAnswerIndex == 1? "bg-[#1EF265A8]": "")}`
+                                                                `w-4/5 h-[100px] p-3 truncate border border-black rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 1? (correct? "bg-[#1EF265A8]": "bg-[#F51C1F]"): (correctAnswerIndex == 1? "bg-[#1EF265A8]": "")}`
                                                             }
                                                             {...(nextQuiz? { disabled: true }: {})}
                                                             onClick={() => handleQuizAnswer(quiz[quizIndex]?.options[1], 1)}
@@ -246,28 +290,26 @@ const VocabLearn = () => {
                                                             correct? 
                                                             <Check 
                                                                 className={
-                                                                    `w-1/5 h-full text-[#1EF265A8] ${answerIndex == 1? "": "invisible"}`
+                                                                    `w-1/5 h-fit text-[#1EF265A8] ${answerIndex == 1? "": "invisible"}`
                                                                 }
                                                             ></Check>:
                                                             correctAnswerIndex == 1?
                                                             <Check
                                                                 className={
-                                                                    `w-1/5 h-full text-[#1EF265A8]`
+                                                                    `w-1/5 h-fit text-[#1EF265A8]`
                                                                 }
                                                             ></Check>:
                                                             <X
                                                                 className={
-                                                                    `w-1/5 h-full text-[#F51C1F] ${answerIndex == 1? "": "invisible"}`
+                                                                    `w-1/5 h-fit text-[#F51C1F] ${answerIndex == 1? "": "invisible"}`
                                                                 }
                                                             ></X>
                                                         }
                                                     </div>
-                                                </div>
-                                                <div className="h-[45%] w-full flex justify-between">
-                                                <div className="h-1/2 w-1/2 flex space-x-5">
+                                                    <div className="flex space-x-5">
                                                         <button
                                                             className={
-                                                                `w-3/5 h-full px-10 py-3 border border-black rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 2? (correct? "bg-[#1EF265A8]": "bg-[#F51C1F]"): (correctAnswerIndex == 2? "bg-[#1EF265A8]": "")}`
+                                                                `w-4/5 h-[100px] p-3 truncate border border-black rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 2? (correct? "bg-[#1EF265A8]": "bg-[#F51C1F]"): (correctAnswerIndex == 2? "bg-[#1EF265A8]": "")}`
                                                             }
                                                             {...(nextQuiz? { disabled: true }: {})}
                                                             onClick={() => handleQuizAnswer(quiz[quizIndex]?.options[2], 2)}
@@ -276,26 +318,26 @@ const VocabLearn = () => {
                                                             correct? 
                                                             <Check 
                                                                 className={
-                                                                    `w-1/5 h-full text-[#1EF265A8] ${answerIndex == 2? "": "invisible"}`
+                                                                    `w-1/5 h-fit text-[#1EF265A8] ${answerIndex == 2? "": "invisible"}`
                                                                 }
                                                             ></Check>:
                                                             correctAnswerIndex == 2?
                                                             <Check
                                                                 className={
-                                                                    `w-1/5 h-full text-[#1EF265A8]`
+                                                                    `w-1/5 h-fit text-[#1EF265A8]`
                                                                 }
                                                             ></Check>:
                                                             <X
                                                                 className={
-                                                                    `w-1/5 h-full text-[#F51C1F] ${answerIndex == 2? "": "invisible"}`
+                                                                    `w-1/5 h-fit text-[#F51C1F] ${answerIndex == 2? "": "invisible"}`
                                                                 }
                                                             ></X>
                                                         }
                                                     </div>
-                                                    <div className="h-1/2 w-1/2 flex justify-end space-x-5">
+                                                    <div className="flex justify-end space-x-5">
                                                         <button
                                                             className={
-                                                                `w-3/5 h-full px-10 py-3 border border-black rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 3? (correct? "bg-[#1EF265A8]": "bg-[#F51C1F]"): (correctAnswerIndex == 3? "bg-[#1EF265A8]": "")}`
+                                                                `w-4/5 h-[100px] p-3 truncate border border-black rounded-[15px] font-semibold text-2xl ${nextQuiz? "cursor-not-allowed": "hover:bg-[#FDF24EA8] hover:border-[#FCD24F]"} ${answerIndex == 3? (correct? "bg-[#1EF265A8]": "bg-[#F51C1F]"): (correctAnswerIndex == 3? "bg-[#1EF265A8]": "")}`
                                                             }
                                                             {...(nextQuiz? { disabled: true }: {})}
                                                             onClick={() => handleQuizAnswer(quiz[quizIndex]?.options[3], 3)}
@@ -304,18 +346,18 @@ const VocabLearn = () => {
                                                             correct? 
                                                             <Check 
                                                                 className={
-                                                                    `w-1/5 h-full text-[#1EF265A8] ${answerIndex == 3? "": "invisible"}`
+                                                                    `w-1/5 h-fit text-[#1EF265A8] ${answerIndex == 3? "": "invisible"}`
                                                                 }
                                                             ></Check>:
                                                             correctAnswerIndex == 3?
                                                             <Check
                                                                 className={
-                                                                    `w-1/5 h-full text-[#1EF265A8]`
+                                                                    `w-1/5 h-fit text-[#1EF265A8]`
                                                                 }
                                                             ></Check>:
                                                             <X
                                                                 className={
-                                                                    `w-1/5 h-full text-[#F51C1F] ${answerIndex == 3? "": "invisible"}`
+                                                                    `w-1/5 h-fit text-[#F51C1F] ${answerIndex == 3? "": "invisible"}`
                                                                 }
                                                             ></X>
                                                         }
@@ -342,7 +384,7 @@ const VocabLearn = () => {
                                 <div className="w-full h-[80%] flex justify-center rounded-2xl p-5" style={{ border: "1px solid #000000" }}>
                                     <div className="w-[70%] h-full flex flex-col items-center">
                                         <div className="w-full h-[25%] flex items-center">
-                                            <p className="font-extrabold text-6xl">{quiz[quizIndex]?.word || '...'}</p>
+                                            <p className="font-extrabold text-6xl">{quiz[quizIndex]?.word}</p>
                                         </div>
                                         <div className="w-full h-[75%]">
                                                 <div className={`w-full h-1/2 space-y-8 ${nextQuiz? "": "hidden"}`}>
@@ -388,7 +430,7 @@ const VocabLearn = () => {
                             <>
                                 <div className="w-full h-[80%] flex justify-between rounded-2xl p-5" style={{ border: "1px solid #000000" }}>
                                     {
-                                        notLearnedVocabs.length == 0? 
+                                        vocabs.length === 0? 
                                         <div className="w-full h-full flex justify-center items-center">
                                             <Loader size={200}/>
                                         </div>:
@@ -397,14 +439,14 @@ const VocabLearn = () => {
                                                 <div>
                                                     <p className="font-semibold">Tiếng Hàn</p>
                                                     <div className="flex space-x-3">
-                                                        <p className="font-extrabold text-4xl">{notLearnedVocabs[vocabIndex]?.vocabulary.word || '...'}</p>
-                                                        <Volume2 onClick={() => playAudio(notLearnedVocabs[vocabIndex]?.vocabulary.word)} size={30} color="#FFD233" />
+                                                        <p className="font-extrabold text-4xl">{vocabs[vocabIndex]?.vocabulary.word}</p>
+                                                        <Volume2 onClick={() => playAudio(vocabs[vocabIndex]?.vocabulary.word)} size={30} color="#FFD233" />
                                                     </div>
-                                                    <p>{notLearnedVocabs[vocabIndex]?.vocabulary.transcription || '...'}</p>
+                                                    <p>{vocabs[vocabIndex]?.vocabulary.transcription || '...'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="font-semibold">Tiếng Việt</p>
-                                                    <p className="font-extrabold text-4xl">{notLearnedVocabs[vocabIndex]?.vocabulary.definition || '...'}</p>
+                                                    <p className="font-extrabold text-4xl">{vocabs[vocabIndex]?.vocabulary.definition || '...'}</p>
                                                 </div>
                                             </div>
                                             <div className="w-2/3 h-full flex justify-end space-x-3">
@@ -421,7 +463,7 @@ const VocabLearn = () => {
                                         Quay lại
                                     </button>
                                     <button onClick={handleNextQuestion} className="px-4 py-2 rounded-lg bg-[#FDF24E]">
-                                        Tiếp theo
+                                        {vocabIndex === vocabs.length - 1 && progress === 1? "Hoàn thành": "Tiếp theo"}
                                     </button>
                                 </div>
                             </>

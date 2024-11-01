@@ -41,10 +41,17 @@ const NavigationBar = () => {
                 <MdGolfCourse size={25} />
                 <p className="px-2">Khóa học của tôi</p>
             </div>
-            <div className="w-full h-auto flex flex-row items-center p-3 rounded-lg">
+            <NavLink
+            to="/transaction"
+            className="w-full h-auto flex flex-row items-center p-3 rounded-lg"
+            style={({ isActive }) => {
+                return {
+                  backgroundColor: isActive? "#FFFFFF": "",
+                };
+            }}>
                 <GrTransaction size={25} />
                 <p className="px-2">Giao dịch của tôi</p>
-            </div>
+            </NavLink>
         </div>
     )
 }

@@ -25,7 +25,7 @@ import { Bell, EllipsisVertical, LogOut } from "lucide-react";
 import { set } from "date-fns";
 
 const HomeUser = () => {
-    const [cookies, setCookie, removeCookie] = useCookies(['authorization']);
+    const [cookies, setCookies, removeCookie] = useCookies(['authorization']);
     const [user, setUser] = useState({});
     const [courses, setCourses] = useState([]);
     const [topics, setTopics] = useState([]);
@@ -55,18 +55,44 @@ const HomeUser = () => {
         }
     }
 
-    const handleTopic = async (user_id) => {
+    const handleTopic = async () => {
         try {
-            const res = await axios({
+            const topicRes = await axios({
                 method: "GET",
-                url: `http://localhost:8080/api/homepage/${user_id}`,
+                url: `http://localhost:8080/api/homepage/topic-section`,
+                headers: {
+                    Authorization: `Bearer ${cookies.authorization}`,
+                },
+            });
+ 
+            setTopics(topicRes.data.grammar.concat(topicRes.data.topic_vocab));
+
+            const progressRes = await axios({
+                method: "GET",
+                url: `http://localhost:8080/api/homepage/progress-section`,
                 headers: {
                     Authorization: `Bearer ${cookies.authorization}`,
                 },
             });
 
-            setTopics(res.data.topic_section);
-            setProgress(res.data.progress_section);
+            console.log(progressRes.data);
+            setProgress(progressRes.data.grammar.concat(progressRes.data.vocab));
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    const handleCourse = async () => {
+        try {
+            const res = await axios({
+                method: "GET",
+                url: "http://localhost:8080/api/course",
+                headers: {
+                    Authorization: `Bearer ${cookies.authorization}`,
+                },
+            });
+
+            setCourses(res.data);
             console.log(res.data);
         } catch (err) {
             console.log(err);
@@ -74,80 +100,49 @@ const HomeUser = () => {
     }
 
     useEffect(() => {
-        axios({
-            method: "GET",
-            url: "http://localhost:8080/api/course",
-            headers: {
-                Authorization: `Bearer ${cookies.authorization}`,
-            },
-        }).then((res) => {
-            setCourses(res.data);
-        }).catch((err) => {
-            console.log(err);
-        })
-
+        handleCourse();
         handleUser();
-    }, []); // Initial call to fetch user data
+    }, []);
     
     useEffect(() => {
         if (user.id) {
             handleTopic(user.id);
         }
-    }, [user]); // Call handleTopic only when the user state is updated
+    }, [user]);
 
     return (
         <>
             <NavigationBar></NavigationBar>
-            <div className="w-auto px-5 flex flex-col items-center pt-10 overflow-y-scroll">
+            <div className="px-5 flex flex-col items-center pt-10 overflow-y-scroll"  style={{width: "calc(100vw - 20vw - 250px)"}}>
                 <div className="w-full h-[400px] flex ">
                     <img src="/home_image.png" alt="" className="object-fill h-full w-full"/>
                 </div>
                 <div className="w-full flex flex-col justify-self-start">
                     <Carousel className="py-5">
                         <div className="flex justify-between items-center">
-                            <p className="font-montserrat font-semibold text-lg">Chủ đề</p>
+                            <p className="font-montserrat font-semibold text-lg">Khoá học đề cử</p>
                             <div className="space-x-2">
                                 <CarouselPrevious />
                                 <CarouselNext />
                             </div>
                         </div>
-                        <CarouselContent className="h-fit">
+                        <CarouselContent className="">
                             {
-                                topics.grammar?.map((lesson, index) => (
+                                courses.map((course, index) => (
                                     <CarouselItem key={index} className="basis-1/3 my-2">
                                         <Link 
-                                            to={`courses/${lesson.course_id}/grammar`}
+                                            to={`courses/${course.id}`}
                                             state={{
-                                                parent_course: courses[lesson.course_id - 1]
+                                                course: course
                                             }}
-                                            className="w-full h-[400px] flex flex-col rounded-xl p-5 space-y-2" 
+                                            className="w-full min-h-[200px] flex flex-col rounded-xl p-5 space-y-2" 
                                             style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
                                             >
                                                 <img src="course_image.png" alt="" className="w-full h-auto py-3" />
                                                 <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
                                                     <p>HỌC</p>
                                                 </div>
-                                                <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Ngữ Pháp {lesson.course_name} - Bài {lesson.grammar_lesson_number}: {lesson.grammar_name}</p>
-                                        </Link>
-                                    </CarouselItem>
-                                )
-                            )}
-                            {
-                                topics.topic_vocab?.map((topic, index) => (
-                                    <CarouselItem key={index} className="basis-1/3 my-2">
-                                        <Link 
-                                            to={`courses/${topic.course_id}/vocab`}
-                                            state={{
-                                                parent_course: courses[0]
-                                            }}
-                                            className="w-full h-[400px] flex flex-col rounded-xl p-5 space-y-2" 
-                                            style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
-                                            >
-                                                <img src="course_image.png" alt="" className="w-full h-auto py-3" />
-                                                <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
-                                                    <p>HỌC</p>
-                                                </div>
-                                                <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng {topic.course_name} - Chủ đề {topic.topic_name}</p>
+                                                <p className="w-full flex justify-self-start font-montserrat font-bold text-base">{course.course_name}</p>
                                         </Link>
                                     </CarouselItem>
                                 )
@@ -155,7 +150,7 @@ const HomeUser = () => {
                         </CarouselContent>
                     </Carousel>
                 </div>
-                <div className="w-full flex flex-col justify-self-start">
+                <div className={`w-full flex flex-col justify-self-start ${!progress.length && 'hidden'}`}>
                     <Carousel className="py-5">
                         <div className="flex justify-between items-center">
                             <p className="font-montserrat font-semibold text-lg">Tiếp tục học</p>
@@ -164,43 +159,52 @@ const HomeUser = () => {
                                 <CarouselNext />
                             </div>
                         </div>
-                        <CarouselContent className="h-fit">
-                            {
-                                progress.grammar?.map((lesson, index) => (
+                        <CarouselContent className="">
+                        {
+                                progress.map((topic, index) => (
+                                    'grammar_progress' in topic? 
                                     <CarouselItem key={index} className="basis-1/3 my-2">
                                         <Link 
-                                            to={`courses/${lesson.course_id}/grammar`}
+                                            to={`courses/${topic.course_id}/grammar`}
                                             state={{
-                                                parent_course: courses[lesson.course_id - 1]
+                                                parent_course: courses[topic.course_id - 1]
                                             }}
-                                            className="w-full h-[400px] flex flex-col rounded-xl p-5 space-y-2" 
+                                            className="w-full min-h-[200px] flex flex-col justify-between rounded-xl p-5 space-y-2" 
                                             style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
                                             >
-                                                <img src="course_image.png" alt="" className="w-full h-auto py-3" />
-                                                <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
-                                                    <p>HỌC</p>
+                                                <div className="space-y-2">
+                                                    <img src="course_image.png" alt="" className="w-full h-auto py-3" />
+                                                    <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
+                                                        <p>HỌC</p>
+                                                    </div>
+                                                    <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Ngữ Pháp {topic.course_name}</p>
                                                 </div>
-                                                <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Ngữ Pháp {lesson.course_name} - Bài {lesson.grammar_lesson_number}: {lesson.grammar_name}</p>
+                                                <div className="space-y-2">
+                                                    <Progress value={topic.grammar_progress} />
+                                                    <p className="font-semibold">{topic.grammar_progress} %</p>
+                                                </div>
                                         </Link>
-                                    </CarouselItem>
-                                )
-                            )}
-                            {
-                                progress.vocab?.map((topic, index) => (
+                                    </CarouselItem>:
                                     <CarouselItem key={index} className="basis-1/3 my-2">
                                         <Link 
                                             to={`courses/${topic.course_id}/vocab`}
                                             state={{
-                                                parent_course: courses[topic.course_id - 1]
+                                                parent_course: courses[0]
                                             }}
-                                            className="w-full h-[400px] flex flex-col rounded-xl p-5 space-y-2" 
+                                            className="w-full min-h-[200px] flex flex-col justify-between rounded-xl p-5 space-y-2" 
                                             style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
                                             >
-                                                <img src="course_image.png" alt="" className="w-full h-auto py-3" />
-                                                <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
-                                                    <p>HỌC</p>
+                                                <div className="space-y-2">
+                                                    <img src="course_image.png" alt="" className="w-full h-auto py-3" />
+                                                    <div className="w-fit px-3 rounded-2xl" style={{backgroundColor: "#FFF12D33"}}>
+                                                        <p>HỌC</p>
+                                                    </div>
+                                                    <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng {topic.course_name} - Chủ đề {topic.topic_name}</p>
                                                 </div>
-                                                <p className="w-full flex justify-self-start font-montserrat font-bold text-base">Từ Vựng {topic.course_name} - Chủ đề {topic.topic_name}</p>
+                                                <div className="space-y-2">
+                                                    <Progress value={topic.vocabulary_progress} />
+                                                    <p className="font-semibold">{topic.vocabulary_progress} %</p>
+                                                </div>
                                         </Link>
                                     </CarouselItem>
                                 )
@@ -209,7 +213,7 @@ const HomeUser = () => {
                     </Carousel>
                 </div>
             </div>
-            <div className="w-fit flex flex-col items-end text-nowrap p-3" style={{boxShadow: "0px 14px 42px 0px #080F340F"}}>
+            <div className="w-1/5 flex flex-col items-end text-nowrap p-3" style={{boxShadow: "0px 14px 42px 0px #080F340F"}}>
                 <Popover>
                     <PopoverTrigger asChild>
                         <EllipsisVertical className="mb-5"></EllipsisVertical>
@@ -233,9 +237,6 @@ const HomeUser = () => {
                     </Avatar>
                     <p className="font-extrabold text-[#202020]">Xin chào {user.fullname}</p>
                     <p className="font-extrabold text-center text-[#7E7E7E] text-wrap">Tiếp tục học và đạt đến mục tiêu của bạn</p>
-                    <Button className="w-[50px] h-[50px] rounded-full" style={{backgroundColor: "#FFFFFF", border: "1px solid #9E9E9E"}}>
-                        <Bell className="w-full h-full" strokeWidth={2} color="#49454F" />
-                    </Button>
                 </div>
             </div>
         </>

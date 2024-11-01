@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
 import axios from 'axios';
 
-const GrammarLesson = () => {
+const GuestGrammar = () => {
     const { state } = useLocation();
     const [listLesson, setListLesson] = useState([]);
     const [cookies] = useCookies('authorization');
@@ -13,14 +13,11 @@ const GrammarLesson = () => {
         try {
             const res = await axios({
                 method: "GET",
-                url: `http://localhost:8080/api/mycourse/grammar/${state.parent_course.id}/progress`,
-                headers: {
-                    Authorization: `Bearer ${cookies.authorization}`
-                }
+                url: `http://localhost:8080/api/grammar/${state.parent_course.id}`
             })
 
             console.log(res.data);
-            setListLesson(res.data.list_lesson);
+            setListLesson(res.data);
         } catch (err) {
             console.log(err);
         }
@@ -59,8 +56,8 @@ const GrammarLesson = () => {
                             <img src="/course_logo.png" alt="" className="w-[100px] rounded-lg" />
                             <div className="w-full h-full flex flex-col justify-between">
                                 <div>
-                                    <p className="font-extrabold text-xl">Bài {grammar.lesson}: {grammar.name}</p>
-                                    <p className="text-sm">{grammar.description}</p>
+                                    <p className="font-extrabold text-xl">Bài {grammar.lesson_number}: {grammar.grammar_name}</p>
+                                    <p className="text-sm">{grammar.grammar_description}</p>
                                 </div>
                                 <div className="flex justify-end">
                                     <Lock size={25}></Lock>
@@ -74,4 +71,4 @@ const GrammarLesson = () => {
     )
 }
 
-export default GrammarLesson;
+export default GuestGrammar;

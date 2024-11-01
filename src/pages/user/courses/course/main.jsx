@@ -35,7 +35,7 @@ const Course = () => {
                                 <div className="flex flex-col space-y-3">
                                     <div className="flex justify-between items-center">
                                         <p className="font-extrabold text-2xl">{state.course.course_name}</p> 
-                                        <p className="font-bold text-2xl" style={{color: "#FFAB10"}}>${state.course.course_price}</p>
+                                        <p className="font-bold text-2xl" style={{color: "#FFAB10"}}>{state.course.course_price} VNĐ</p>
                                     </div>
                                     <p className="whitespace-pre-line">{state.course.course_description}</p>
                                 </div>

@@ -93,7 +93,6 @@ const transactions = [
         amount: "$ 50,036",
         status: "Thành công",    
     },
-    
 ]
 
 const Transaction = () => {

@@ -2,8 +2,9 @@ import { useCookies } from 'react-cookie';
 
 import Header from '@/components/Header';
 import NavigationBar from '@/components/user/NavigationBar';
-import Topic from '@/components/user/courses/course/vocab/Topic';
+import UserVocab from '@/components/user/courses/course/vocab/UserVocab';
 import GuestNavigationBar from '@/components/user/GuestNavigationBar';
+import GuestVocab from '@/components/user/courses/course/vocab/GuestVocab';
 
 const Vocab = () => {
     const [cookies] = useCookies(['authorization']);
@@ -12,8 +13,17 @@ const Vocab = () => {
         <div className="w-screen h-screen flex flex-col font-montserrat">
             <Header></Header>
             <div className="flex" style={{height: "calc(100vh - 70px)"}}>
-                {cookies.authorization? <NavigationBar></NavigationBar> : <GuestNavigationBar></GuestNavigationBar>}
-                <Topic></Topic>
+                {
+                    cookies.authorization? 
+                    <>
+                        <NavigationBar></NavigationBar> 
+                        <UserVocab></UserVocab>
+                    </>: 
+                    <>
+                        <GuestNavigationBar></GuestNavigationBar>
+                        <GuestVocab></GuestVocab>
+                    </>
+                }
             </div>
         </div>
     )
