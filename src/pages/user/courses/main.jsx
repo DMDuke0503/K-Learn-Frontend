@@ -13,6 +13,15 @@ const Courses = () => {
     const [courses, setCourses] = useState([]);
     const [cookies] = useCookies('authorization');
 
+    const formatCurrency = (value) => {
+        value = value / 100;
+    
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+        }).format(value);
+    };
+
     useEffect(() => {
         axios({
             method: "GET",
@@ -40,14 +49,14 @@ const Courses = () => {
                         <div key={course.id} className="w-auto h-auto p-5 flex space-x-3">
                             <Link 
                             to={`/courses/${course.id}`} 
-                            state={{course: course}}
+                            state={{course_id: course.id}}
                             className="p-3 space-x-2 flex items-center border rounded-2xl font-montserrat"
                             >
                                 <img src="course_logo.png" alt="" className="w-[216px] h-[216px] rounded-lg" />   
                                 <div className="flex flex-col">
                                     <div className="flex justify-between">
                                         <p className="font-extrabold text-2xl">{course.course_name.toUpperCase()}</p> 
-                                        <p className="font-bold text-2xl" style={{color: "#FFAB10"}}>${course.course_price}</p>
+                                        <p className="font-bold text-2xl" style={{color: "#FFAB10"}}>{formatCurrency(course.course_price)}</p>
                                     </div>
                                     <p className="whitespace-pre-line">
                                         {course.course_description}

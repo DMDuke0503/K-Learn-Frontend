@@ -25,6 +25,8 @@ import Payment from './pages/user/payment/main';
 import PaymentResult from './pages/user/payment/PaymentResult';
 import UserTransaction from './pages/user/transaction/main';
 import DetailUserTransaction from './pages/user/transaction/detail/main';
+import MyCourses from './pages/user/mycourses/main';
+import MyVocabs from './pages/user/myvocabs/main';
 
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
@@ -103,6 +105,15 @@ const router = createBrowserRouter([
     path: "/transaction/:id",
     Component: DetailUserTransaction,
   },
+  {
+    path: "/mycourses",
+    Component: MyCourses,
+  },
+  {
+    path: "/myvocabs",
+    Component: MyVocabs,
+  },
+  
 ]);
 
 createRoot(document.getElementById('root')).render(

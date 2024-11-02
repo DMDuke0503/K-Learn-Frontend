@@ -33,14 +33,28 @@ const NavigationBar = () => {
                 <FaBook size={25} />
                 <p className="px-2">Khóa học</p>
             </NavLink>
-            <div className="w-full h-auto flex flex-row items-center p-3 rounded-lg">
+            <NavLink
+            to="/myvocabs"
+            className="w-full h-auto flex flex-row items-center p-3 rounded-lg"
+            style={({ isActive }) => {
+                return {
+                  backgroundColor: isActive? "#FFFFFF": "",
+                };
+            }}>
                 <GoFileDirectoryFill size={25} />
                 <p className="px-2">Từ vựng của tôi</p>
-            </div>
-            <div className="w-full h-auto flex flex-row items-center p-3 rounded-lg">
+            </NavLink>
+            <NavLink 
+            to="/mycourses"
+            className="w-full h-auto flex flex-row items-center p-3 rounded-lg"
+            style={({ isActive }) => {
+                return {
+                  backgroundColor: isActive? "#FFFFFF": "",
+                };
+            }}>
                 <MdGolfCourse size={25} />
                 <p className="px-2">Khóa học của tôi</p>
-            </div>
+            </NavLink>
             <NavLink
             to="/transaction"
             className="w-full h-auto flex flex-row items-center p-3 rounded-lg"

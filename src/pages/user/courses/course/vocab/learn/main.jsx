@@ -29,6 +29,8 @@ const VocabLearn = () => {
     const [nextQuiz, setNextQuiz] = useState(false);
     const [id, setId] = useState(0);
     const [count, setCount] = useState(0);
+    const [markedVocab, setMarkedVocab] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const getNotLearnedVocabs = async () => {
         try {
@@ -94,7 +96,6 @@ const VocabLearn = () => {
     }
 
     const handlePrevQuestion = () => {
-        console.log(vocabIndex);
         if (vocabIndex > 0) {
             setVocabIndex(vocabIndex - 1)
         }
@@ -202,6 +203,66 @@ const VocabLearn = () => {
         value.lang = "ko-KR";
         res.speak(value);
     }
+
+    const handleCheckMarkedVocab = async (vocab_id) => {
+        try {
+            setLoading(true);
+
+            const res = await axios({
+                method: "GET",
+                url: `http://localhost:8080/api/marked_vocabulary/exist_marked_vocab/${vocab_id}`,
+                headers: {
+                    Authorization: `Bearer ${cookies.authorization}`
+                }
+            });
+
+            console.log(res.data);
+
+            if (res.data === false) {
+                setMarkedVocab(false);
+            } else {
+                setMarkedVocab(true);
+            }
+
+            setLoading(false);
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    const handleMarkedVocab = async (vocab_id) => {
+        if (markedVocab === false) {
+            try {
+                const res = await axios({
+                    method: "POST",
+                    url: `http://localhost:8080/api/marked_vocabulary/marked/${vocab_id}`,
+                    headers: {
+                        Authorization: `Bearer ${cookies.authorization}`
+                    }
+                });
+
+                console.log(res.data);
+                setMarkedVocab(true);
+            } catch (err) {
+                console.log(err);
+            }
+        } else {
+            try {
+                const res = await axios({
+                    method: "DELETE",
+                    url: `http://localhost:8080/api/marked_vocabulary/soft_delete/${vocab_id}`,
+                    headers: {
+                        Authorization: `Bearer ${cookies.authorization}`
+                    }
+                });
+
+                console.log(res.data);
+                setMarkedVocab(false);
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    }
     
     useEffect(() => {
         getNotLearnedVocabs();
@@ -216,6 +277,10 @@ const VocabLearn = () => {
             setVocabIndex(notLearnedVocabs.length? learnedVocabs.length: (notLearnedVocabs.length + learnedVocabs.length - 1));
         }
     }, [learnedVocabs, notLearnedVocabs]);
+
+    useEffect(() => {
+        handleCheckMarkedVocab(vocabs[vocabIndex]?.vocabulary.id);
+    }, [learnedVocabs, notLearnedVocabs, vocabIndex]);
 
     return (
         <div className="w-screen h-screen flex flex-col font-montserrat">
@@ -430,11 +495,11 @@ const VocabLearn = () => {
                             <>
                                 <div className="w-full h-[80%] flex justify-between rounded-2xl p-5" style={{ border: "1px solid #000000" }}>
                                     {
-                                        vocabs.length === 0? 
+                                        vocabs.length === 0 || loading? 
                                         <div className="w-full h-full flex justify-center items-center">
                                             <Loader size={200}/>
                                         </div>:
-                                        <>
+                                        <div className="w-full h-full flex  space-x-2">
                                             <div className="w-1/3 h-full flex flex-col justify-start space-y-5">
                                                 <div>
                                                     <p className="font-semibold">Tiếng Hàn</p>
@@ -451,12 +516,10 @@ const VocabLearn = () => {
                                             </div>
                                             <div className="w-2/3 h-full flex justify-end space-x-3">
                                                 <img src="/pronunciation.png" alt="" className="w-auto h-auto" />
-                                                <Heart className="w-[30px] h-[30px]" />
                                             </div>
-                                        </>
+                                            <Heart onClick={() => handleMarkedVocab(vocabs[vocabIndex]?.vocabulary.id)} size={50} className={`${markedVocab? "text-red-500 fill-red-500": "text-black fill-black"}`} />
+                                        </div>
                                     }
-                                    
-                                    
                                 </div>
                                 <div className="flex justify-between px-5">
                                     <button onClick={handlePrevQuestion} className="px-4 py-2 rounded-lg bg-[#D9D9D9]">

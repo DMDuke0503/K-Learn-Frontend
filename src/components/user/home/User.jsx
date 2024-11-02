@@ -22,7 +22,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import NavigationBar from "@/components/user/NavigationBar";
 
 import { Bell, EllipsisVertical, LogOut } from "lucide-react";
-import { set } from "date-fns";
 
 const HomeUser = () => {
     const [cookies, setCookies, removeCookie] = useCookies(['authorization']);
@@ -133,7 +132,7 @@ const HomeUser = () => {
                                         <Link 
                                             to={`courses/${course.id}`}
                                             state={{
-                                                course: course
+                                                course_id: course.id
                                             }}
                                             className="w-full min-h-[200px] flex flex-col rounded-xl p-5 space-y-2" 
                                             style={{boxShadow: "0px 14px 40px 0px #080F340F"}}

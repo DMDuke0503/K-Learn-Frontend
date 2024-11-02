@@ -16,7 +16,7 @@ const Payment = () => {
   const handlePayment = async () => {
     try {
       const params = new URLSearchParams();
-      params.append('amount', state.parent_course.course_price.toString());
+      params.append('amount', (state.parent_course.course_price / 100).toString());
       params.append('orderInfo', state.parent_course.id.toString());
 
       const response = await axios.post('http://localhost:8080/api/payment/submitOrder', params, {
@@ -28,7 +28,6 @@ const Payment = () => {
       if (response.data.redirectUrl) {
         const paymentWindow = window.open(response.data.redirectUrl, '_blank', 'width=500,height=600');
         
-        // Poll for payment status in the original window
         const checkStatus = setInterval(() => {
           const status = localStorage.getItem('paymentStatus');
           if (status) {
@@ -53,6 +52,15 @@ const Payment = () => {
     if (paymentStatus === 'success') {
       navigate('/');
     }
+  };
+
+  const formatCurrency = (value) => {
+    value = value / 100;
+
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND',
+    }).format(value);
   };
 
   useEffect(() => {
@@ -102,16 +110,16 @@ const Payment = () => {
                 </div>
                 <div className="w-[500px] flex justify-between text-xl">
                   <p>Giá tiền</p>
-                  <p>{state.parent_course.course_price} VNĐ</p>
+                  <p>{formatCurrency(state.parent_course.course_price)}</p>
                 </div>
                 <div className="w-[500px] flex justify-between text-xl">
                   <p>Giảm giá (10%)</p>
-                  <p>0 VNĐ</p>
+                  <p>{formatCurrency(0)}</p>
                 </div>
                 <div className="w-[500px] h-[1px] bg-black"></div>
                 <div className="w-[500px] flex justify-between font-extrabold text-xl pb-4">
                   <p>Tổng cộng</p>
-                  <p>{state.parent_course.course_price} VNĐ</p>
+                  <p>{formatCurrency(state.parent_course.course_price)}</p>
                 </div>
                 <div className="w-[500px] h-[1px] bg-black"></div>
                 <div className="w-[500px] flex flex-col text-xl space-y-2 pt-4">

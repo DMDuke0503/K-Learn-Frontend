@@ -24,8 +24,10 @@ const UserVocab = () => {
     const [paymentStatus, setPaymentStatus] = useState("");
 
     const handleVocabList = (id, index) => {
-        if (index >= 3 && paymentStatus !== "success") {
+        if (paymentStatus === "pending" && index >= 3) {
             navigate("/payment", {state: {parent_course: state.parent_course}});
+        } else if (paymentStatus === "") {
+            navigate(`/courses/${state.parent_course.id}`, {state: {course: state.parent_course}, relative: true});
         }
 
         axios({
@@ -49,9 +51,24 @@ const UserVocab = () => {
                     Authorization: `Bearer ${cookies.authorization}`
                 }
             });
-            setTopics(res.data.topics);
-            setProgress(res.data.course_progress);
-            setPaymentStatus(res.data.payment_status);
+            
+            if (Object.keys(res.data).length) {
+                setTopics(res.data.topics);
+                setProgress(res.data.course_progress);
+                setPaymentStatus(res.data.payment_status);
+            } else {
+                try {
+                    const res = await axios({
+                        method: "GET",
+                        url: `http://localhost:8080/api/homepage/vocabulary/${state.parent_course.id}`
+                    })
+        
+                    console.log(res.data);
+                    setTopics(res.data);
+                } catch (err) {
+                    console.log(err);
+                }
+            }
 
             console.log(res.data);
         } catch (err) {
@@ -68,7 +85,7 @@ const UserVocab = () => {
             <div className="w-full h-full flex space-x-3">
                 <Link 
                     to=".." 
-                    state={{ course: state.parent_course }}
+                    state={{ course_id: state.parent_course.id }}
                     relative="path" 
                     className="justify-self-start p-5"
                 >
@@ -76,19 +93,21 @@ const UserVocab = () => {
                 </Link>
                 <div className="w-[90%] h-full flex flex-col space-y-5">
                     <p className="pt-5 font-extrabold text-2xl text-nowrap">{"Từ Vựng " + state.parent_course.course_name}</p>
-                    <div className="flex justify-between items-center">
-                        <Progress className="w-[90%] h-5" value={progress}></Progress>
-                        <p className="font-semibold text-xl">{progress} %</p>
-                    </div>
-                    <div className="w-full h-auto space-y-3 flex flex-col items-center">
-                        <div className="p-3 space-x-2 flex items-center border rounded-2xl font-montserrat">
-                            <img src="/course_logo.png" alt="" className="w-[216px] h-[216px] rounded-lg" />   
-                            <div className="h-full flex flex-col justify-start space-y-3">
-                                <p className="font-extrabold text-2xl">TỪ VỰNG {state.parent_course.course_name.toUpperCase()}</p>
-                                <p className="whitespace-pre-line">{state.parent_course.course_description}</p>
-                            </div>
+                    <div className={`flex flex-col space-y-5 ${!paymentStatus && 'hidden'}`}>
+                        <div className="flex justify-between items-center">
+                            <Progress className="w-[90%] h-5" value={progress}></Progress>
+                            <p className="font-semibold text-xl">{progress} %</p>
                         </div>
-                        <button className={`w-1/6 h-[50px] rounded-[15px] ${progress >= 80? "bg-[#FFF12D]": "bg-gray-400 cursor-not-allowed"}`}>KIỂM TRA</button>
+                        <div className="w-full h-auto space-y-3 flex flex-col items-center">
+                            <div className="p-3 space-x-2 flex items-center border rounded-2xl font-montserrat">
+                                <img src="/course_logo.png" alt="" className="w-[216px] h-[216px] rounded-lg" />   
+                                <div className="h-full flex flex-col justify-start space-y-3">
+                                    <p className="font-extrabold text-2xl">TỪ VỰNG {state.parent_course.course_name.toUpperCase()}</p>
+                                    <p className="whitespace-pre-line">{state.parent_course.course_description}</p>
+                                </div>
+                            </div>
+                            <button className={`w-1/6 h-[50px] rounded-[15px] ${progress >= 80? "bg-[#FFF12D]": "bg-gray-400 cursor-not-allowed"}`}>KIỂM TRA</button>
+                        </div>
                     </div>
                     <p className="font-extrabold text-xl">Chủ đề</p>
                     <div className="w-full space-y-5">
@@ -107,7 +126,7 @@ const UserVocab = () => {
                                                 <p className="font-extrabold text-sm">{topic.total_word} từ vựng</p>
                                             </div>
                                             {
-                                                (index < 3 && paymentStatus !== "success")? <Bookmark size={25}></Bookmark>: paymentStatus === "success"? <Bookmark size={25}></Bookmark>: <Lock size={25}></Lock>
+                                                paymentStatus === "pending"? (index < 3? <Bookmark size={25}></Bookmark>: <Lock size={25}></Lock>): paymentStatus === "success"? <Bookmark size={25}></Bookmark>: <Lock size={25}></Lock>
                                             }
                                         </div>
                                     </div>
@@ -123,7 +142,7 @@ const UserVocab = () => {
                                             <p className="font-semibold text-xl">Chủ đề: {topic.topic_name}</p>
                                             <p className="font-semibold">Từ và cụm từ: {topic.total_word}</p>
                                             <Link 
-                                                to={cookies.authorization ? "./learn" : "/login"}
+                                                to={cookies.authorization? "learn": "/login"}
                                                 state={{
                                                     parent_course: state.parent_course,
                                                     topic: topic
