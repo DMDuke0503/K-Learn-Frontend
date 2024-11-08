@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, CirclePlus, Bookmark } from 'lucide-react';
+import { ArrowLeft, Lock, CirclePlus, Bookmark, LockOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
 import axios from 'axios';
@@ -27,19 +27,19 @@ const UserVocab = () => {
         if (paymentStatus === "pending" && index >= 3) {
             navigate("/payment", {state: {parent_course: state.parent_course}});
         } else if (paymentStatus === "") {
-            navigate(`/courses/${state.parent_course.id}`, {state: {course: state.parent_course}, relative: true});
+            navigate(`/courses/${state.parent_course.id}`, {state: {course_id: state.parent_course.id}, relative: true});
+        } else {
+            axios({
+                method: "GET",
+                url: `http://localhost:8080/api/vocabulary/${id}`,
+            })
+            .then(res => {
+                setVocabs(res.data);
+            })
+            .catch(err => {
+                console.log(err);
+            });
         }
-
-        axios({
-            method: "GET",
-            url: `http://localhost:8080/api/vocabulary/${id}`,
-        })
-        .then(res => {
-            setVocabs(res.data);
-        })
-        .catch(err => {
-            console.log(err);
-        });
     };
 
     const handleTopic = async () => {
@@ -76,6 +76,12 @@ const UserVocab = () => {
         }
     };
 
+    const handleTest = (course_id) => {
+        if (progress>= 80) {
+            navigate("test", {state: {course_id: course_id}});
+        }
+    }
+
     useEffect(() => {
         handleTopic();
     }, [state.parent_course.id]);
@@ -106,7 +112,7 @@ const UserVocab = () => {
                                     <p className="whitespace-pre-line">{state.parent_course.course_description}</p>
                                 </div>
                             </div>
-                            <button className={`w-1/6 h-[50px] rounded-[15px] ${progress >= 80? "bg-[#FFF12D]": "bg-gray-400 cursor-not-allowed"}`}>KIỂM TRA</button>
+                            <button onClick={() => handleTest(state.parent_course.id)} className={`w-1/6 h-[50px] rounded-[15px] ${progress >= 80? "bg-[#FFF12D]": "bg-gray-400 cursor-not-allowed"}`}>KIỂM TRA</button>
                         </div>
                     </div>
                     <p className="font-extrabold text-xl">Chủ đề</p>
@@ -126,7 +132,7 @@ const UserVocab = () => {
                                                 <p className="font-extrabold text-sm">{topic.total_word} từ vựng</p>
                                             </div>
                                             {
-                                                paymentStatus === "pending"? (index < 3? <Bookmark size={25}></Bookmark>: <Lock size={25}></Lock>): paymentStatus === "success"? <Bookmark size={25}></Bookmark>: <Lock size={25}></Lock>
+                                                paymentStatus === "pending"? (index < 3? <LockOpen size={25}></LockOpen>: <Lock size={25}></Lock>): paymentStatus === "success"? <LockOpen size={25}></LockOpen>: <Lock size={25}></Lock>
                                             }
                                         </div>
                                     </div>

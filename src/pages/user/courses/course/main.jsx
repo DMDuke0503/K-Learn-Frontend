@@ -28,26 +28,30 @@ const Course = () => {
     };
 
     const handleRegister = async (course_id) => {
-        if (paymentStatus === "") {
-            try {
-                setLoading(true);
-    
-                const res = await axios({
-                    method: "GET",
-                    url: `http://localhost:8080/api/mycourse/enroll/${course_id}`,
-                    headers: {
-                        Authorization: `Bearer ${cookies.authorization}`
-                    }
-                });
-    
-                console.log(res.data);
-                setPaymentStatus("pending");
-                setLoading(false);
-            } catch (err) {
-                console.log(err);
+        if (cookies.authorization) {
+            if (paymentStatus === "") {
+                try {
+                    setLoading(true);
+        
+                    const res = await axios({
+                        method: "GET",
+                        url: `http://localhost:8080/api/mycourse/enroll/${course_id}`,
+                        headers: {
+                            Authorization: `Bearer ${cookies.authorization}`
+                        }
+                    });
+        
+                    console.log(res.data);
+                    setPaymentStatus("pending");
+                    setLoading(false);
+                } catch (err) {
+                    console.log(err);
+                }
+            } else if (paymentStatus === "pending") {
+                navigate("/payment", {state: {parent_course: course}});
             }
-        } else if (paymentStatus === "pending") {
-            navigate("/payment", {state: {parent_course: course}});
+        } else {
+            navigate("/login");
         }
     }
 
@@ -135,22 +139,24 @@ const Course = () => {
                                 </Button>
                                 <div className="w-full flex flex-col items-start space-y-5">
                                     <Link 
-                                    to={`/courses/${course.id}/vocab/`}
-                                    state={{
-                                        parent_course: course
-                                    }}
-                                    className="flex items-center space-x-2">
+                                        to={`/courses/${course.id}/vocab/`}
+                                        state={{
+                                            parent_course: course
+                                        }}
+                                        className="flex items-center space-x-2"
+                                    >
                                         <img src="/vocab_logo.png" alt="" />
-                                            <p className="font-extrabold text-2xl">{"Từ Vựng " + course.course_name}</p>
+                                        <p className="font-extrabold text-2xl">{"Từ Vựng " + course.course_name}</p>
                                     </Link>
                                     <Link 
-                                    to={`/courses/${course.id}/grammar/`}
-                                    state={{
-                                        parent_course: course
-                                    }}
-                                    className="flex items-center space-x-2">
+                                        to={`/courses/${course.id}/grammar/`}
+                                        state={{
+                                            parent_course_id: course.id
+                                        }}
+                                        className="flex items-center space-x-2"
+                                    >
                                         <img src="/vocab_logo.png" alt="" />
-                                            <p className="font-extrabold text-2xl">{"Ngữ Pháp " + course.course_name}</p>
+                                        <p className="font-extrabold text-2xl">{"Ngữ Pháp " + course.course_name}</p>
                                     </Link>
                                 </div>
                             </div>

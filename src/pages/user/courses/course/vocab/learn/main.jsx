@@ -300,7 +300,7 @@ const VocabLearn = () => {
                         </Link>
                     </div>
                     <div className="w-4/5 h-full flex flex-col justify-center space-y-3">
-                        <p className="font-extrabold text-2xl">Từ Vựng {state.parent_course.course_name} - Chủ Đề {state.topic.topic_name}</p>
+                        <p className="w-full h-fit font-extrabold text-2xl">Từ Vựng {state.parent_course.course_name} - Chủ Đề {state.topic.topic_name}</p>
                         <Progress value={progress * 100} className="h-[15px]" />
                         {
                             isQuiz? 

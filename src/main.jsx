@@ -27,10 +27,12 @@ import UserTransaction from './pages/user/transaction/main';
 import DetailUserTransaction from './pages/user/transaction/detail/main';
 import MyCourses from './pages/user/mycourses/main';
 import MyVocabs from './pages/user/myvocabs/main';
+import VocabTest from './pages/user/courses/course/vocab/test/main';
 
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { vi } from 'date-fns/locale';
+import GrammarTest from './pages/user/courses/course/grammar/test/main';
 
 const router = createBrowserRouter([
   {
@@ -62,8 +64,16 @@ const router = createBrowserRouter([
     Component: VocabLearn
   },
   {
+    path: "/courses/:id/vocab/test",
+    Component: VocabTest
+  },
+  {
     path: "/courses/:id/grammar",
     Component: Grammar
+  },
+  {
+    path: "/courses/:id/grammar/test",
+    Component: GrammarTest
   },
   {
     path: "/courses/:id/grammar/learn",

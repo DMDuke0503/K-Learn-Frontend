@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import Header from "@/components/Header";
 
 const Login = () => {
     const [cookies, setCookie] = useCookies(['authorization']);
@@ -49,11 +50,8 @@ const Login = () => {
 
     return (
         <div className="h-screen w-screen flex flex-col">
-            <div className="h-[12%] flex flex-row items-end mx-20">
-                <img src="/logo.png" alt="" style={{ width: 70, height: "auto" }} />
-                <p className="font-montserrat text-4xl font-bold py-[5px]" style={{ color: "#FCD24F" }}>K-LEARN</p>
-            </div>
-            <div className="h-[88%] flex justify-center items-center">
+            <Header></Header>
+            <div className="flex justify-center items-center" style={{height: "calc(100vh - 70px)"}}>
                 <img src="/nha_hanok.png" alt="" className="w-full h-full z-1" />
                 <div className="h-4/5 w-4/5 absolute z-50 flex flex-col items-center justify-center" style={{ backgroundColor: "#0000004C" }} >
                     <p className="font-montserrat text-5xl font-bold mt-20" style={{ color: "#FFFFFF" }}>ĐĂNG NHẬP</p>

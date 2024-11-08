@@ -60,7 +60,7 @@ const UserTransaction = () => {
         } catch (error) {
             console.log(error);
         }
-    }
+    };
 
     const handlePageChange = (pageIndex) => {
         if (pageIndex < 1 || pageIndex > totalPages) {
@@ -70,6 +70,14 @@ const UserTransaction = () => {
             setCurrentPage(transactions.slice((pageIndex - 1) * itemsPerPage, pageIndex * itemsPerPage));
         }
     };
+
+    const handleSearch = (e) => {
+        const searchValue = e.target.value;
+        const searchResult = transactions.filter((transaction) => transaction.id.toString().includes(searchValue));
+        setTotalItems(searchResult.length);
+        setTotalPages(Math.ceil(searchResult.length / itemsPerPage));
+        setCurrentPage(searchResult.slice(0, itemsPerPage));
+    }
 
     const formatCurrency = (value) => {
         value = value / 100;
@@ -94,7 +102,7 @@ const UserTransaction = () => {
                         <div className="w-full flex justify-between">
                             <div className="w-full flex items-center px-5 py-2 rounded-3xl" style={{border: "1px solid #CCCCCC99", boxShadow: "0px 4px 4px 0px #00000040"}}>
                                 <FaSearch />
-                                <Input placeholder="Tìm kiếm" className="border-0 shadow-none focus-visible:ring-0"></Input>
+                                <Input onChange={(e) => handleSearch(e)} placeholder="Tìm kiếm" className="border-0 shadow-none focus-visible:ring-0"></Input>
                             </div>
                         </div>
                         <div className="h-[80%] overflow-y-hidden">

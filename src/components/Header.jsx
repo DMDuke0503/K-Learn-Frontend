@@ -6,10 +6,10 @@ const Header = () => {
 
     return (
         <div className="h-[70px] flex justify-between items-center px-20" style={{boxShadow: "0px 4px 4px 0px #00000040"}}>
-            <div className="flex items-end">
+            <Link to={"/"} className="flex items-end">
                 <img src="/logo.png" alt="" style={{width: 70, height: "auto"}}/>
                 <p className="font-montserrat text-4xl font-bold py-[5px]" style={{color: "#FCD24F"}}>K-LEARN</p>
-            </div>
+            </Link>
             {!cookies.authorization ? 
             <Link 
             to="/login"

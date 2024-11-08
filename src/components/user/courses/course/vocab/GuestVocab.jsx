@@ -33,7 +33,7 @@ const GuestVocab = () => {
                 <Link 
                 to=".." 
                 state={{
-                    course: state.parent_course
+                    course_id: state.parent_course.id
                 }}
                 relative="path" 
                 className="justify-self-start p-5"

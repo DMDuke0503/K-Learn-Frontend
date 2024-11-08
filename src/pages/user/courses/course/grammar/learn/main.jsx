@@ -169,6 +169,7 @@ const GrammarLearn = () => {
             if (!isQuiz) {
                 if ('quiz' in grammarLesson) {
                     setIsQuiz(true);
+                    handleDoneLesson(grammarLesson.id, state.parent_course.id);
                 } else {
                     setIsQuiz(false);
                     setGradingResults(null);
@@ -243,6 +244,8 @@ const GrammarLearn = () => {
     useEffect(() => {
         getGrammarProgress();
     }, [isDone, grammarLesson, listAnswer]);
+
+    console.log(state.grammar)
 
     return (
         <div className="w-screen h-screen flex flex-col font-montserrat">
@@ -376,7 +379,7 @@ const GrammarLearn = () => {
                                                     <CircleCheck size={25} className={`${lesson.theory.learned && "text-[#1EF265A8]"}`}></CircleCheck>
                                                 </div>
                                             </div>
-                                            <div className={`w-full flex justify-end ${'quiz' in lesson? "": "hidden"}`}>
+                                            <div className={`w-full flex justify-end`}>
                                                 <div className="w-[10%] bg-[#F3F4F6]">
 
                                                 </div>
@@ -384,7 +387,7 @@ const GrammarLearn = () => {
                                                     <p className="ml-3 font-semibold text-xl">QUIZ - Yêu cầu đạt 80%</p>
                                                 </div>
                                                 <div className="w-[10%] py-5">
-                                                    <CircleCheck size={25} className={`${!lesson.quiz?.passed? (lesson.quiz?.failed? "text-[#F51C1F]": ""): "text-[#1EF265A8]"}`}></CircleCheck>
+                                                    <CircleCheck size={25} className={`${!lesson.quiz?.passed? (lesson.quiz?.failed? "text-[#F51C1F]": ""): "text-[#1EF265A8]"} ${!('quiz' in lesson)? "text-[#1EF265A8]": ""}`}></CircleCheck>
                                                 </div>
                                             </div>
                                         </div>

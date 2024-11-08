@@ -63,9 +63,9 @@ const HomeGuest = () => {
                                 courses.map((course, index) => (
                                     <CarouselItem key={index} className="basis-1/3 my-2">
                                         <Link 
-                                            to={`courses/${course.id}/grammar`}
+                                            to={`courses/${course.id}`}
                                             state={{
-                                                parent_course: courses[course.id - 1]
+                                                course_id: course.id
                                             }}
                                             className="w-full min-h-[200px] flex flex-col rounded-xl p-5 space-y-2" 
                                             style={{boxShadow: "0px 14px 40px 0px #080F340F"}}
