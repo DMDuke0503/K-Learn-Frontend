@@ -14,6 +14,7 @@ const UserGrammar = () => {
     const [progress, setProgress] = useState(0);
     const [paymentStatus, setPaymentStatus] = useState("");
     const [loading, setLoading] = useState(true);
+    const [testResult, setTestResult] = useState({});
 
     const handleCourse = async () => {
         try {
@@ -68,7 +69,27 @@ const UserGrammar = () => {
 
     const handleTest = (course_id) => {
         if (progress>= 80) {
-            navigate("test", {state: {course_id: course_id}});
+            if (Object.keys(testResult).length) {
+                navigate("result", {state: {testResult: testResult}});
+            } else {
+                navigate("test", {state: {course_id: course_id}});
+            }
+        }
+    }
+
+    const handleGrammarTestResult = async (course_id) => {
+        try {
+            const res = await axios({
+                method: "GET",
+                url: `http://localhost:8080/api/comprehensive-test-results/grammar/${course_id}`,
+                headers: {
+                    Authorization: `Bearer ${cookies.authorization}`
+                }
+            });
+            setTestResult(res.data);
+            setLoading(false);
+        } catch (err) {
+            console.log(err);
         }
     }
 
@@ -78,6 +99,7 @@ const UserGrammar = () => {
     
     useEffect(() => {
         handleListLesson();
+        handleGrammarTestResult(course.id);
     }, [course]);
 
     return (

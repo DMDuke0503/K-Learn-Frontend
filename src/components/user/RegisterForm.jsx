@@ -99,26 +99,6 @@ const RegisterForm = () => {
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel className="font-montserrat font-bold text-xl p-3" style={{color: "#FFFFFF"}}>Ngày sinh</FormLabel>
-                            {/* <Popover>
-                                <PopoverTrigger asChild>
-                                <FormControl className="bg-white h-12 w-full rounded-3xl p-3 font-montserrat font-bold text-lg">
-                                    <Button
-                                    variant={"outline"}
-                                    className={cn(!field.value && "text-muted-foreground"
-                                    )}>
-                                    {field.value ? (
-                                        format(field.value, "P")
-                                    ) : (
-                                        <span>Nhập ngày sinh</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <DatePicker></DatePicker>
-                                </PopoverContent>
-                            </Popover> */}
                             <DatePicker 
                             value={field.value}
                             onChange={field.onChange}

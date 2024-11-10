@@ -27,7 +27,6 @@ const VocabLearn = () => {
     const [correct, setCorrect] = useState(false);
     const [correctAnswerIndex, setCorrectAnswerIndex] = useState(null);
     const [nextQuiz, setNextQuiz] = useState(false);
-    const [id, setId] = useState(0);
     const [count, setCount] = useState(0);
     const [markedVocab, setMarkedVocab] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -104,7 +103,7 @@ const VocabLearn = () => {
     const handleNextQuestion = () => {
         setVocabIndex((prevIndex) => {
             if (prevIndex === vocabs.length - 1 && progress === 1) {
-                navigate(`/courses/${state.parent_course.id}/vocab`, {state: {parent_course: state.parent_course}, relative: "path"});
+                navigate(`/courses/${state.parent_course.id}/vocab`, {state: {parent_course_id: state.parent_course.id}, relative: "path"});
                 return prevIndex;
             }
     
@@ -292,7 +291,7 @@ const VocabLearn = () => {
                         <Link
                             to=".."
                             state={{
-                                parent_course: state.parent_course
+                                parent_course_id: state.parent_course.id
                             }}
                             relative="path"
                         >

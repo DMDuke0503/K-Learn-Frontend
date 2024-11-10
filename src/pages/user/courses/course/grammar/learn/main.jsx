@@ -210,7 +210,7 @@ const GrammarLearn = () => {
                     }
                     handleDoneLesson(grammarLesson.id, state.parent_course.id);
                     setIsDone(false);
-                    navigate("..", { state: { parent_course: state.parent_course }, relative: "path" });
+                    navigate(`/courses/${state.parent_course.id}/grammar`, { state: { parent_course_id: state.parent_course.id } });
                     console.log(grammarLesson);
                 }
             } else {
@@ -257,7 +257,7 @@ const GrammarLearn = () => {
                         <div className="w-full h-[90%] flex items-start p-5"> 
                             <Link 
                                 to=".." 
-                                state={{ parent_course: state.parent_course }}
+                                state={{ parent_course_id: state.parent_course.id }}
                                 relative="path" 
                                 className="justify-self-start p-5"
                             >

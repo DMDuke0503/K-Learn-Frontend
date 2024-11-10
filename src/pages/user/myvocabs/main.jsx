@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CircleCheck } from 'lucide-react';
 import axios from "axios";
 import { useCookies } from "react-cookie";
@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { set } from "date-fns";
 
 const MyVocabs = () => {
-    const { state } = useLocation();
+    const navigate = useNavigate();
     const [cookies] = useCookies();
     const [vocabs, setVocabs] = useState([]);
     const [choosenVocab, setChoosenVocab] = useState([]);
@@ -36,6 +36,24 @@ const MyVocabs = () => {
             setChoosenVocab(choosenVocab.filter((item) => item !== vocab));
         } else {
             setChoosenVocab([...choosenVocab, vocab]);
+        }
+    }
+
+    const handleQuiz = async () => {
+        try {
+            const res = await axios({
+                method: "POST",
+                url: `http://localhost:8080/api/marked_vocabulary/quiz_from_vocab_ids`,
+                headers: {
+                    Authorization: `Bearer ${cookies.authorization}`
+                },
+                data: choosenVocab
+            });
+
+            console.log(res.data);
+            navigate("/myvocabs/quiz", {state: {quiz: res.data}});
+        } catch (err) {
+            console.log(err);
         }
     }
 
@@ -77,13 +95,16 @@ const MyVocabs = () => {
                             }
                         </div>
                     </div>
-                    <div className="w-full h-1/4">
+                    <div className={`w-full h-1/4 ${!vocabs.length && "hidden"}`}>
                         <div className="w-full space-x-3 flex items-center">
                             <p className="font-semibold text-xl">Đã chọn: </p>
                             <p className="font-semibold text-xl text-[#C87202]">{choosenVocab.length}</p>
                         </div>
                         <div className="w-full flex justify-center">
-                            <button className="h-fit py-5 px-10 rounded-[15px] bg-[#FDF24E] font-extrabold text-2xl">LÀM QUIZ</button>
+                            <button
+                                onClick={() => handleQuiz()}
+                                className="h-fit py-5 px-10 rounded-[15px] bg-[#FDF24E] font-extrabold text-2xl"
+                            >LÀM QUIZ</button>
                         </div>
                     </div>
                 </div>

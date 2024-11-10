@@ -141,7 +141,7 @@ const Course = () => {
                                     <Link 
                                         to={`/courses/${course.id}/vocab/`}
                                         state={{
-                                            parent_course: course
+                                            parent_course_id: course.id
                                         }}
                                         className="flex items-center space-x-2"
                                     >

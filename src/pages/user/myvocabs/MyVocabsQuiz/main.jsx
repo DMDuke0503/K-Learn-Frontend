@@ -1,79 +1,91 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useCookies } from "react-cookie";
-import axios from "axios";
-import { FlagTriangleRight, X, LoaderCircle, Check } from "lucide-react";
-
 import Header from "@/components/Header";
 import SmallNavigationBar from "@/components/user/SmallNavigationBar";
-import ResultComponent from "@/components/user/courses/course/vocab/test/ResultComponent";
 
-const VocabTest = () => {
-    const { state } = useLocation();
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { X, FlagTriangleRight, LoaderCircle } from "lucide-react";
+
+const MyVocabsQuiz = () => {
     const navigate = useNavigate();
-    const [cookies] = useCookies(['authorization']);
-    const [course, setCourse] = useState({});
-    const [vocabTest, setVocabTest] = useState([]);
-    const [selectedQuestion, setSelectedQuestion] = useState({});
-    const [selectedAnswer, setSelectedAnswer] = useState([]);
-    const [flags, setFlags] = useState([]);
-    const [selectedIndex, setSelectedIndex] = useState(0);
+    const { state } = useLocation();
+    const [loading, setLoading] = useState(true);
     const [showExitConfirmation, setShowExitConfirmation] = useState(false);
     const [showSubmitConfirmation, setShowSubmitConfirmation] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [vocabTest, setVocabTest] = useState(state.quiz);
+    const [selectedQuestion, setSelectedQuestion] = useState(vocabTest[0]);
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const [flags, setFlags] = useState(new Array(vocabTest.length).fill(false));
+    const [selectedAnswer, setSelectedAnswer] = useState(new Array(vocabTest.length).fill({ user_answer: "" }));
+    const [listAnswer, setListAnswer] = useState({answers: []});
     const [score, setScore] = useState(null);
-    
-    const [listAnswer, setListAnswer] = useState({
-        answers: [],
-        course_id: state.course_id
-    });
 
-    const handleCourse = async (course_id) => {
-        try {
-            const res = await axios.get(`http://localhost:8080/api/course/${course_id}`, {
-                headers: { Authorization: `Bearer ${cookies.authorization}` }
-            });
-            setCourse(res.data);
-        } catch (err) {
-            console.log(err);
-        }
+    const handleExit = () => {
+        setShowExitConfirmation(true);
     };
 
-    const handleVocabTest = async (course_id) => {
+    const handleConfirmExit = () => {
+        setShowExitConfirmation(false);
+        navigate(`/myvocabs`);
+    };
+
+    const handleCancelExit = () => {
+        setShowExitConfirmation(false);
+    };
+
+    const handleSubmit = () => {
+        setShowSubmitConfirmation(true);
+    };
+
+    const calculateScore = () => {
         try {
-            const res = await axios.get(`http://localhost:8080/api/comprehensive_quiz/vocabulary/${course_id}`, {
-                headers: { Authorization: `Bearer ${cookies.authorization}` }
+            let correctCount = 0;
+            let incorrectCount = 0;
+    
+            listAnswer.answers.forEach((answer) => {
+                if (answer.is_correct) correctCount++;
+                else incorrectCount++;
             });
-
-            setVocabTest(res.data);
-            setSelectedQuestion(res.data[0]);
-            setSelectedAnswer(new Array(res.data.length).fill({
-                user_answer: "",
-            }));
-            setFlags(new Array(res.data.length).fill(false));
-
-            const initialAnswers = res.data.map((question) => ({
-                user_answer: "",
-                is_correct: false,
-                type: question.type,
-                word: question.word,
-                definition: question.definition,
-                options: question.options,
-            }));
-
-            setListAnswer((prevState) => ({
-                ...prevState,
-                answers: initialAnswers
-            }));
-
-        } catch (err) {
-            console.log(err);
+    
+            return { correctCount, incorrectCount };
+        } catch (error) {
+            console.error("Error calculating score:", error);
+            return null;
         }
+    };
+    
+    const handleConfirmSubmit = () => {
+        setShowSubmitConfirmation(false);
+        setLoading(true);
+    
+        const calculatedScore = calculateScore();
+        if (calculatedScore) {
+            navigate("/myvocabs/result", { state: { score: calculatedScore, listAnswer: listAnswer } });
+        } else {
+            console.error("Error: Score calculation failed.");
+        }
+    
+        setLoading(false);
+    };
+
+    const handleCancelSubmit = () => {
+        setShowSubmitConfirmation(false);
     };
 
     const handleChangeQuestion = (question_id) => {
         setSelectedQuestion(vocabTest[question_id]);
         setSelectedIndex(question_id);
+    };
+
+    const handleNextQuestion = () => {
+        if (selectedIndex < vocabTest.length - 1) {
+            handleChangeQuestion(selectedIndex + 1);
+        }
+    };
+
+    const handlePreviousQuestion = () => {
+        if (selectedIndex > 0) {
+            handleChangeQuestion(selectedIndex - 1);
+        }
     };
 
     const handleFlagToggle = (index) => {
@@ -107,106 +119,23 @@ const VocabTest = () => {
         });
     };
 
-    const handleNextQuestion = () => {
-        if (selectedIndex < vocabTest.length - 1) {
-            handleChangeQuestion(selectedIndex + 1);
-        }
-    };
+    useState(() => {
+        const initialAnswers = state.quiz.map((question) => ({
+            user_answer: "",
+            is_correct: false,
+            type: question.type,
+            word: question.word,
+            definition: question.definition,
+            options: question.options,
+        }));
 
-    const handlePreviousQuestion = () => {
-        if (selectedIndex > 0) {
-            handleChangeQuestion(selectedIndex - 1);
-        }
-    };
+        setListAnswer((prevState) => ({
+            ...prevState,
+            answers: initialAnswers
+        }));
 
-    const handleExit = () => {
-        setShowExitConfirmation(true);
-    };
-
-    const handleConfirmExit = () => {
-        setShowExitConfirmation(false);
-        navigate(`/courses/${state.course_id}/vocab`, {state: {parent_course_id: course.id}});
-    };
-
-    const handleCancelExit = () => {
-        setShowExitConfirmation(false);
-    };
-
-    const handleSubmit = () => {
-        setShowSubmitConfirmation(true);
-    };
-
-    const handleConfirmSubmit = async () => {
-        setShowSubmitConfirmation(false);
-        setLoading(true);
-
-        const scoreCalculated = await calculateScore();
-        if (scoreCalculated) {
-            await handleSubmitAnswer();
-        }
         setLoading(false);
-    };
-
-    const handleCancelSubmit = () => {
-        setShowSubmitConfirmation(false);
-    };
-
-    const calculateScore = async () => {
-        try {
-            let correctCount = 0;
-            let incorrectCount = 0;
-
-            listAnswer.answers.forEach((answer) => {
-                if (answer.is_correct) correctCount++;
-                else incorrectCount++;
-            });
-
-            setScore({ correctCount, incorrectCount });
-            return true;
-        } catch (error) {
-            console.error("Error calculating score:", error);
-            return false;
-        }
-    };
-
-    const handleSubmitAnswer = async () => {
-        if (!listAnswer.answers.length) {
-            console.error("No answers to submit");
-            return;
-        }
-
-        try {
-            const response = await axios.post(
-                "http://localhost:8080/api/comprehensive-test-results/submit-vocabulary-quiz-answers",
-                listAnswer,
-                { headers: { Authorization: `Bearer ${cookies.authorization}` } }
-            );
-            console.log("Submitted answers successfully:", response.data);
-
-            const testResult = await axios.get(
-                `http://localhost:8080/api/comprehensive-test-results/vocabulary/${course.id}`,
-                { headers: { Authorization: `Bearer ${cookies.authorization}` } }
-            );
-
-
-            navigate(`/courses/${state.course_id}/vocab/result`, { state: { testResult: testResult.data } });
-        } catch (error) {
-            console.error("Error submitting answers:", error);
-        }
-    };
-
-    const handleData = async () => {
-        await handleVocabTest(state.course_id);
-        await handleCourse(state.course_id);
-        setSelectedIndex(0);
-        setLoading(false);
-    }
-
-    useEffect(() => {
-        handleData();
     }, []);
-
-    console.log(selectedQuestion);
 
     return (
         <div className="w-screen h-screen flex flex-col font-montserrat">
@@ -222,7 +151,7 @@ const VocabTest = () => {
                             : (
                                 <>
                                     <div className="w-[90%] flex justify-between">
-                                        <p className="font-extrabold text-2xl">Từ Vựng {course.course_name} - Kiểm Tra Tổng Hợp</p>
+                                        <p className="font-extrabold text-2xl">Từ Vựng Của Tôi - Quiz</p>
                                         <X size={50} color="#83471F" onClick={handleExit} className="cursor-pointer" />
                                     </div>                                    
                                     <div className="w-[90%] pt-10 flex">
@@ -279,8 +208,8 @@ const VocabTest = () => {
                                                     <button 
                                                         key={index} 
                                                         onClick={() => handleChangeQuestion(index)}
-                                                        className={`
-                                                            relative flex justify-center items-center text-center font-semibold border border-[#111111] rounded-[10px]
+                                                        className={` 
+                                                            aspect-square relative flex justify-center items-center text-center font-semibold border border-[#111111] rounded-[10px]
                                                             ${
                                                                 index === selectedIndex? "bg-blue-300" : ""
                                                             }
@@ -382,4 +311,4 @@ const VocabTest = () => {
     );
 }
 
-export default VocabTest;
+export default MyVocabsQuiz;

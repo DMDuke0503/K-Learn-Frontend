@@ -7,8 +7,6 @@ import HomeGuest from "@/components/user/home/Guest";
 const Home = () => {
     const [cookies] = useCookies(['authorization']);
 
-    console.log(cookies.authorization);
-
     return (
         <div className="h-screen w-screen flex flex-col font-montserrat">
             <Header></Header>

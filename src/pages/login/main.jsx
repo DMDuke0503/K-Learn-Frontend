@@ -86,7 +86,7 @@ const Login = () => {
                             </form>
                         </Form>
                         <div className="w-1/2 flex flex-row justify-between">
-                            <p className="font-montserrat font-bold text-md" style={{ color: "#FFFFFF" }}>Quên mật khẩu?</p>
+                            <Link to="/forget-password" className="font-montserrat font-bold text-md" style={{ color: "#FFFFFF" }}>Quên mật khẩu?</Link>
                             <Link to="/register"><p className="font-montserrat font-bold text-md" style={{ color: "#FFFFFF" }}>Đăng ký tài khoản</p></Link>
                         </div>
                         <div className="w-1/2 flex flex-row justify-center items-center">

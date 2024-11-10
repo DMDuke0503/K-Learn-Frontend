@@ -7,7 +7,7 @@ import { FlagTriangleRight, X, LoaderCircle, Check } from "lucide-react";
 import Header from "@/components/Header";
 import SmallNavigationBar from "@/components/user/SmallNavigationBar";
 
-const GrammarTest = () => {
+const GrammarTestAnswers = () => {
     const { state } = useLocation();
     const navigate = useNavigate();
     const [cookies] = useCookies(['authorization']);
@@ -23,6 +23,7 @@ const GrammarTest = () => {
     const [score, setScore] = useState(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [showAnswers, setShowAnswers] = useState(false);
+    const [isRetake, setIsRetake] = useState(false);
     const [listAnswer, setListAnswer] = useState({
         answers: [],
         course_id: state.course_id
@@ -39,39 +40,8 @@ const GrammarTest = () => {
         }
     };
 
-    const handleVocabTest = async (course_id) => {
-        try {
-            const res = await axios.get(`http://localhost:8080/api/comprehensive_quiz/grammar/${course_id}`, {
-                headers: { Authorization: `Bearer ${cookies.authorization}` }
-            });
-
-            setVocabTest(res.data);
-            setSelectedQuestion(res.data[0]);
-            setSelectedAnswer(new Array(res.data.length).fill({
-                user_answer: "",
-            }));
-            setFlags(new Array(res.data.length).fill(false));
-
-            const initialAnswers = res.data.map((question) => ({
-                user_answer: "",
-                is_correct: false,
-                question_id: question.question_id,
-                options: question.options,
-                grammar_id: question.grammar_id
-            }));
-
-            setListAnswer((prevState) => ({
-                ...prevState,
-                answers: initialAnswers
-            }));
-
-        } catch (err) {
-            console.log(err);
-        }
-    };
-
     const handleChangeQuestion = (question_id) => {
-        setSelectedQuestion(grammarTest[question_id]);
+        setSelectedQuestion(selectedAnswer[question_id]);
         setSelectedIndex(question_id);
     };
 
@@ -107,7 +77,7 @@ const GrammarTest = () => {
     };
 
     const handleNextQuestion = () => {
-        if (selectedIndex < grammarTest.length - 1) {
+        if (selectedIndex < selectedAnswer.length - 1) {
             handleChangeQuestion(selectedIndex + 1);
         }
     };
@@ -129,10 +99,6 @@ const GrammarTest = () => {
 
     const handleCancelExit = () => {
         setShowExitConfirmation(false);
-    };
-
-    const handleSubmit = () => {
-        setShowSubmitConfirmation(true);
     };
 
     const handleConfirmSubmit = async () => {
@@ -182,31 +148,24 @@ const GrammarTest = () => {
                 { headers: { Authorization: `Bearer ${cookies.authorization}` } }
             );
             console.log("Submitted answers successfully:", response.data);
-
-            const testResult = await axios.get(
-                `http://localhost:8080/api/comprehensive-test-results/grammar/${course.id}`,
-                { headers: { Authorization: `Bearer ${cookies.authorization}` } }
-            );
-
-
-            navigate(`/courses/${state.course_id}/grammar/result`, { state: { testResult: testResult.data } });
         } catch (error) {
             console.error("Error submitting answers:", error);
         }
     };
 
-    const handleData = async () => {
-        await handleVocabTest(state.course_id);
+    const fetchData = async () => {
         await handleCourse(state.course_id);
+        setSelectedAnswer(state.testAnswers);
+        setSelectedQuestion(state.testAnswers[0]);
         setSelectedIndex(0);
         setLoading(false);
-    }
+    };
 
     useEffect(() => {
-        handleData();
+        fetchData();
     }, []);
 
-    console.log(selectedQuestion);
+    console.log(selectedQuestion)
 
     return (
         <div className="w-screen h-screen flex flex-col font-montserrat">
@@ -224,21 +183,26 @@ const GrammarTest = () => {
                                     <div className="w-[90%] flex justify-between">
                                         <p className="font-extrabold text-2xl">Từ Vựng {course.course_name} - Kiểm Tra Tổng Hợp</p>
                                         <X size={50} color="#83471F" onClick={handleExit} className="cursor-pointer" />
-                                    </div>                                    
-                                    <div className="w-[90%] pt-10 flex">
-                                        <div className="w-2/3 h-full">
-                                            <div className="w-[95%] h-full space-y-10">
-                                                <div className="aspect-square max-h-[200px] p-5 space-y-3 bg-[#D9D9D9] border border-black rounded-[20px]">
-                                                    <p className="font-extrabold text-2xl">Câu {selectedIndex + 1}</p>
-                                                    <p className="font-semibold text-lg">Điểm: 4</p>
-                                                    <FlagTriangleRight 
-                                                        onClick={() => handleFlagToggle(selectedIndex)} 
-                                                        size={40} 
-                                                        className={`cursor-pointer ${flags[selectedIndex] ? "fill-red-500 stroke-red-500" : ""}`}
-                                                    />
-                                                </div>
-                                                <div className="w-full h-fit min-h-[100px] p-5 space-y-3 border border-black rounded-[20px]">
-                                                    {
+                                    </div>
+                                    {loading ? (
+                                        <div className="w-[90%] h-full flex items-center justify-center">
+                                            <LoaderCircle size={500} className="animate-spin" />
+                                        </div>
+                                    ) : (
+                                        <div className="w-[90%] pt-10 flex">
+                                            <div className="w-2/3 h-full">
+                                                <div className="w-[95%] h-full space-y-10">
+                                                    <div className="aspect-square max-h-[200px] p-5 space-y-3 bg-[#D9D9D9] border border-black rounded-[20px]">
+                                                        <p className="font-extrabold text-2xl">Câu {selectedIndex + 1}</p>
+                                                        <p className="font-semibold text-lg">Điểm: 4</p>
+                                                        <FlagTriangleRight 
+                                                            onClick={() => handleFlagToggle(selectedIndex)} 
+                                                            size={40} 
+                                                            className={`cursor-pointer ${flags[selectedIndex] ? "fill-red-500 stroke-red-500" : ""}`}
+                                                        />
+                                                    </div>
+                                                    <div className="w-full h-fit min-h-[100px] p-5 space-y-3 border border-black rounded-[20px]">
+                                                        {
                                                             selectedQuestion.type === "multichoice"? 
                                                             (
                                                                 <>
@@ -251,14 +215,27 @@ const GrammarTest = () => {
                                                                                     className={`
                                                                                         w-4/5 h-[80px] p-3 truncate border border-black rounded-[15px] font-semibold text-lg
                                                                                         ${
-                                                                                            option === selectedAnswer[selectedIndex]?.user_answer
-                                                                                                ? "bg-yellow-300"
-                                                                                                : "bg-[#F2F2F2]"
+                                                                                            option === selectedQuestion.correct_answer
+                                                                                                ? "bg-[#1EF265]"
+                                                                                                : option === selectedAnswer[selectedIndex]?.user_answer 
+                                                                                                    ? option !== selectedQuestion.correct_answer
+                                                                                                        ? "bg-[#F51C1F]"
+                                                                                                        : "bg-[#1EF265]"
+                                                                                                    : ""
                                                                                         }
                                                                                     `}
                                                                                 >
                                                                                     {option}
                                                                                 </button>
+                                                                                {
+                                                                                    option === selectedQuestion.correct_answer 
+                                                                                        ? <Check size={50} className="text-[#1EF265]" />
+                                                                                        : option === selectedAnswer[selectedIndex]?.user_answer 
+                                                                                            ? option !== selectedQuestion.correct_answer
+                                                                                                ? <X size={50} className="text-[#F51C1F]" />
+                                                                                                : <Check size={50} className="text-[#1EF265]" />
+                                                                                            : ""
+                                                                                }
                                                                             </div>
                                                                         ))}
                                                                     </div>
@@ -266,70 +243,83 @@ const GrammarTest = () => {
                                                             ) : (
                                                                 <>
                                                                     <p className="text-xl">{selectedQuestion.question_text}</p>
-                                                                    <input onChange={(e) => handleAnswerSelection(e.target.value)} value={selectedAnswer[selectedIndex]?.user_answer} type="text" placeholder="Nhập định nghĩa đúng ..." className="w-full h-[50px] px-5 border border-black rounded-[20px]" />
+                                                                    <p className="font-semibold text-xl">Nhập định nghĩa đúng</p>
+                                                                    <div className="flex items-center space-x-3">
+                                                                        <div 
+                                                                            className={`
+                                                                                w-[90%] h-[50px] flex items-center px-3 border border-black rounded-[20px]
+                                                                                ${
+                                                                                    selectedAnswer[selectedIndex].user_answer.toLowerCase() === selectedQuestion.correct_answer.toLowerCase()
+                                                                                        ? "bg-[#1EF265]"
+                                                                                        : "bg-[#F51C1F]"
+                                                                                }
+                                                                            `}
+                                                                        >
+                                                                            <p className="text-xl">{selectedAnswer[selectedIndex].user_answer}</p>
+                                                                        </div>
+                                                                        {
+                                                                            selectedAnswer[selectedIndex].user_answer.toLowerCase() === selectedQuestion.correct_answer.toLowerCase() 
+                                                                                ? <Check size={50} className="text-[#1EF265]" />
+                                                                                : <X size={50} className="text-[#F51C1F]" />
+                                                                        }
+                                                                    </div>
+                                                                    <p className="font-semibold text-xl">Đáp án</p>
+                                                                    <div className="flex items-center space-x-3">
+                                                                        <div className="w-[90%] h-[50px] px-3 flex items-center border border-black rounded-[20px] bg-[#1EF265]">
+                                                                            <p className="text-xl">{selectedQuestion.correct_answer}</p>
+                                                                        </div>
+                                                                        <Check size={50} className="text-[#1EF265]" />
+                                                                    </div>
                                                                 </>
                                                             )
-                                                    }
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="w-1/3 h-full flex flex-col items-center">
+                                                <div className="w-[400px] h-[400px] p-5 grid grid-cols-5 gap-4 border-2 border-[#111111] rounded-[20px]">
+                                                    {selectedAnswer.map((_, index) => (
+                                                        <button 
+                                                            key={index} 
+                                                            onClick={() => handleChangeQuestion(index)}
+                                                            className={`
+                                                                relative flex justify-center items-center text-center font-semibold border border-[#111111] rounded-[10px]
+                                                                ${
+                                                                    selectedAnswer[index].user_answer.toLowerCase() === selectedAnswer[index].correct_answer.toLowerCase()
+                                                                        ? "bg-[#1EF265]"
+                                                                        : "bg-[#F51C1F]"
+                                                                }
+                                                            `}
+                                                        >
+                                                            {index + 1}
+                                                            {flags[index] && (
+                                                                <FlagTriangleRight 
+                                                                    size={16} 
+                                                                    className="absolute top-1 right-1 fill-red-500 stroke-red-500" 
+                                                                />
+                                                            )}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <div className="w-full h-[100px] px-5 flex justify-between items-center">
+                                                    <button 
+                                                        onClick={handlePreviousQuestion} 
+                                                        className="w-[120px] h-[50px] bg-[#D9D9D9] rounded-[10px] font-semibold"
+                                                        disabled={selectedIndex === 0}
+                                                    >
+                                                        QUAY LẠI
+                                                    </button>
+                                                    <button 
+                                                        onClick={handleNextQuestion} 
+                                                        className="w-[120px] h-[50px] bg-[#FDF24E] rounded-[10px] font-semibold"
+                                                        disabled={selectedIndex === selectedAnswer.length - 1}
+                                                    >
+                                                        TIẾP TỤC
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="w-1/3 h-full flex flex-col items-center">
-                                            <div className="w-[400px] h-[400px] p-5 grid grid-cols-5 gap-4 border-2 border-[#111111] rounded-[20px]">
-                                                {grammarTest.map((_, index) => (
-                                                    <button 
-                                                        key={index} 
-                                                        onClick={() => handleChangeQuestion(index)}
-                                                        className={`
-                                                            relative flex justify-center items-center text-center font-semibold border border-[#111111] rounded-[10px]
-                                                            ${
-                                                                index === selectedIndex && !showAnswers ? "bg-blue-300" : ""
-                                                            }
-                                                            ${
-                                                                selectedAnswer[index]?.user_answer !== ""
-                                                                    ? "bg-yellow-300"
-                                                                    : "bg-[#F2F2F2]"
-                                                            }
-                                                        `}
-                                                    >
-                                                        {index + 1}
-                                                        {flags[index] && (
-                                                            <FlagTriangleRight 
-                                                                size={16} 
-                                                                className="absolute top-1 right-1 fill-red-500 stroke-red-500" 
-                                                            />
-                                                        )}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <div className="w-full h-[100px] px-5 flex justify-between items-center">
-                                                <button 
-                                                    onClick={handlePreviousQuestion} 
-                                                    className="w-[120px] h-[50px] bg-[#D9D9D9] rounded-[10px] font-semibold"
-                                                    disabled={selectedIndex === 0}
-                                                >
-                                                    QUAY LẠI
-                                                </button>
-                                                <button 
-                                                    onClick={handleNextQuestion} 
-                                                    className="w-[120px] h-[50px] bg-[#FDF24E] rounded-[10px] font-semibold"
-                                                    disabled={selectedIndex === grammarTest.length - 1}
-                                                >
-                                                    TIẾP TỤC
-                                                </button>
-                                            </div>
-                                            <div>
-                                                <button 
-                                                    onClick={handleSubmit} 
-                                                    className={
-                                                        `w-[200px] h-[50px] bg-[#00DA49] rounded-[10px] font-semibold
-                                                        ${isSubmitted ? "hidden" : ""}`
-                                                    }
-                                                >
-                                                    NỘP BÀI
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    )}
                                 </>
                             )
                     }
@@ -383,4 +373,4 @@ const GrammarTest = () => {
     );
 }
 
-export default GrammarTest;
+export default GrammarTestAnswers;
